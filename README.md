@@ -1,0 +1,2 @@
+# InifinityBot
+Modular Telegram Bot
