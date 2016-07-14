@@ -1,0 +1,5 @@
+.env
+package/
+package/*
+node_modules/
+node_modules/*

@@ -1,0 +1,16 @@
+{
+  "name": "bottymcbotface_bot",
+  "version": "1.0.0",
+  "description": "telegram markov chain bot",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nathan Brooks",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^2.0.0",
+    "hashmap": "^2.0.5",
+    "telegram-bot-api": "^1.1.0"
+  }
+}
