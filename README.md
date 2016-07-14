@@ -1,2 +1,2 @@
-# InifinityBot
+# InfinityBot
 Modular Telegram Bot
