@@ -6,9 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/NathanBrooks/InfinityBot.git"
+  },
   "author": "Nathan Brooks",
   "license": "ISC",
   "dependencies": {
+    "chokidar": "^1.6.0",
     "dotenv": "^2.0.0",
     "hashmap": "^2.0.5",
     "telegram-bot-api": "^1.1.0"
