@@ -6,7 +6,8 @@ var chokidar = require('chokidar');
 
 /* initialize telegram api */
 
-var BotName = process.env.BOT_NAME
+global.BotName = process.env.BOT_NAME;
+
 var api = new Telegram({
         token: process.env.TEL_API_KEY,
         updates: {
@@ -20,7 +21,6 @@ global.SendMessage = function SendMessage(message, chat_id, reply) {
         api.sendMessage({
             chat_id: chat_id,
             text: "<Empty Message>",
-            disable_web_page_preview: true,
             reply_to_message_id: (reply != null ? reply : undefined)
         });
     } else {
@@ -31,7 +31,6 @@ global.SendMessage = function SendMessage(message, chat_id, reply) {
             api.sendMessage({
                 chat_id: chat_id,
                 text: message.substring(tmp, i),
-                disable_web_page_preview: "true",
                 reply_to_message_id: (reply != null ? reply : undefined)
             });
         }

@@ -28,15 +28,17 @@ module.exports = {
 };
 
 function handleMessage(message) {
-    var linkCount = 0;
-    var linkResult = "";
-    var textArr = message.text.split(/\s+/);
-    for(var newWord in textArr) {
-        if(textArr[newWord].indexOf('r/') > -1) {
-            linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//)[1] + "\n";
-            linkCount++;
+    if('text' in message) {
+        var linkCount = 0;
+        var linkResult = "";
+        var textArr = message.text.split(/\s+/);
+        for(var newWord in textArr) {
+            if(textArr[newWord].indexOf('r/') > -1) {
+                linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//)[1] + "\n";
+                linkCount++;
+            }
         }
-    }
 
-    if (linkCount > 0) global.SendMessage(linkResult, message.chat.id, message.message_id);
+        if (linkCount > 0) global.SendMessage(linkResult, message.chat.id, message.message_id);
+    }
 }

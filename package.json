@@ -15,6 +15,7 @@
   "dependencies": {
     "chokidar": "^1.6.0",
     "dotenv": "^2.0.0",
+    "forever": "^0.15.2",
     "hashmap": "^2.0.5",
     "telegram-bot-api": "^1.1.0"
   }
