@@ -53,6 +53,7 @@ watcher.on('add', path => {
 });
 
 watcher.on('unlink', path => {
+	delete require.cache[require.resolve('./' + path)];
     module_list[path].free();
     module_list.splice(module_list.indexOf(path), 1);
     console.log(path + " has been removed");

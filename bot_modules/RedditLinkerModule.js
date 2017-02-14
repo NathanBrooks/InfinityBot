@@ -1,7 +1,7 @@
 'use strict';
 
 const module_name = "Reddit Linker Module"
-const module_version = "1.0"
+const module_version = "1.1"
 const module_settings = "/RedditLinkerModule"
 
 var api;
@@ -33,8 +33,9 @@ function handleMessage(message) {
         var linkResult = "";
         var textArr = message.text.split(/\s+/);
         for(var newWord in textArr) {
-            if(textArr[newWord].indexOf('r/') > -1) {
-                linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//)[1] + "\n";
+	    var match = textArr[newWord].match(/^\/r\/|^r\//i);
+            if(textArr[newWord].indexOf(match[0]) > -1) {
+                linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//i)[1] + "\n";
                 linkCount++;
             }
         }

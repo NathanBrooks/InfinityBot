@@ -31,5 +31,5 @@ var inc = 0;
 
 function handleMessage(message){
     inc++;
-    console.log("handled messageL: " + inc);
+    console.log("handled message: " + inc);
 }

@@ -1,8 +1,6 @@
 'use strict';
 require('dotenv').config();
 var http = require('http');
-var Futures = require('futures');
-
 
 const module_name = "Meme Generator Module"
 const module_version = "1.0"
@@ -62,7 +60,7 @@ function generateMeme(message) {
 	var Line1 = "";
 	var pollingLevel = 0;
 	for(var newWord in textArr) {
-		if(textArr[newWord] != "|") {
+		if(textArr[newWord] != ":") {
 			switch(pollingLevel) {
 				case 0:
 					searchTerm += textArr[newWord] + " ";
@@ -95,7 +93,7 @@ function generateMeme(message) {
 				var imageID = MG_SEARCH.result[0].imageUrl.match(/[^\/]+$/)[0].split('.')[0];
 
 				http.get('http://version1.api.memegenerator.net/Instance_Create?' +
-					'username='+ process.env.MG_USER +'&password='+ process.env.MG_PASS +'&languageCode=en&generatorID=45' +
+					'username='+ process.env.MG_USER +'&password='+ process.env.MG_PASS +'&languageCode=en&generatorID=' + generatorID +
 					'&imageID='+imageID+'&text0=' + Line0 + '&text1=' + Line1, function(mRes){
 					var finalBody = '';
 					mRes.on('data', function(chunk){

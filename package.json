@@ -17,6 +17,7 @@
     "dotenv": "^2.0.0",
     "forever": "^0.15.2",
     "hashmap": "^2.0.5",
+    "request": "^2.74.0",
     "telegram-bot-api": "^1.1.0"
   }
 }
