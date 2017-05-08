@@ -43,7 +43,7 @@ function parseCommand(message) {
 	if(fullCommand.length == 1 || 									// no name was specified
  	   fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
 
-    	switch(fullCommand[0]) {
+    	switch(fullCommand[0].toLowerCase()) {
        		case "/mg":
        	    	generateMeme(message);
        	    	break;
@@ -77,7 +77,7 @@ function generateMeme(message) {
 		}
 	}
 
-	http.get('http://version1.api.memegenerator.net/Generators_Search?q=' + searchTerm + '&pageIndex=0&pageSize=1', function(res) {
+	http.get('http://version1.api.memegenerator.net/Generators_Search?q=' + searchTerm + '&pageIndex=0&pageSize=1&apiKey=' + process.env.MG_API_KEY, function(res) {
 		var body = '';
 
 		res.on('data', function(chunk){
@@ -91,10 +91,10 @@ function generateMeme(message) {
 
 				var generatorID = MG_SEARCH.result[0].generatorID;
 				var imageID = MG_SEARCH.result[0].imageUrl.match(/[^\/]+$/)[0].split('.')[0];
-
+				//var imageID = MG_SEARCH.result[0].imageID;
 				http.get('http://version1.api.memegenerator.net/Instance_Create?' +
 					'username='+ process.env.MG_USER +'&password='+ process.env.MG_PASS +'&languageCode=en&generatorID=' + generatorID +
-					'&imageID='+imageID+'&text0=' + Line0 + '&text1=' + Line1, function(mRes){
+					'&imageID='+ imageID +'&text0=' + Line0 + '&text1=' + Line1 + '&apiKey=' + process.env.MG_API_KEY, function(mRes){
 					var finalBody = '';
 					mRes.on('data', function(chunk){
 						finalBody += chunk;

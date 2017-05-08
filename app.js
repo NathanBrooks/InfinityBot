@@ -37,6 +37,14 @@ global.SendMessage = function SendMessage(message, chat_id, reply) {
     }
 }
 
+global.SendSticker = function SendSticker(sticker_id, chat_id, reply) {
+    api.sendSticker({
+        chat_id: chat_id,
+        sticker: sticker_id,
+        reply_to_message_id: (reply != null ? reply : undefined)
+    });
+}
+
 /* file watcher stuff */
 
 var module_list = [];

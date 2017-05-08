@@ -1,8 +1,8 @@
 'use strict';
 
-const module_name = "Confirmation Module"
+const module_name = "Shame Module"
 const module_version = "0.1"
-const module_settings = "/ConfirmationModule"
+const module_settings = "/ShameModule"
 
 var api;
 var app;
@@ -46,9 +46,9 @@ function parseCommand(message){
     if(fullCommand.length == 1 ||                                   // no name was specified
        fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
 
-        switch(fullCommand[0].toLowerCase) {
-            case "/confirm":
-                confirmed(message);
+        switch(fullCommand[0].toLowerCase()) {
+            case "/shame":
+                shamed(message);
                 break;
             default: ;
         }
@@ -56,10 +56,11 @@ function parseCommand(message){
 }
 
 
-function confirmed(message){
-    if('reply_to_message' in message) {
-        global.SendMessage("I can confirm this!", message.chat.id, message.reply_to_message.message_id);
-    } else {
-        global.SendMessage("I can confirm this!", message.chat.id, message.message_id);
-    }
+function shamed(message){
+console.log('shaming');
+   var shameShep = message.text.split(/\s+/);
+   if(shameShep.length > 1) {
+	   console.log('sending');
+	global.SendMessage('For shame ' + shameShep[1] + '. For Shame.', message.chat.id);
+   }
 }

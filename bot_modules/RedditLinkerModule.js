@@ -34,7 +34,7 @@ function handleMessage(message) {
         var textArr = message.text.split(/\s+/);
         for(var newWord in textArr) {
 	    var match = textArr[newWord].match(/^\/r\/|^r\//i);
-            if(textArr[newWord].indexOf(match[0]) > -1) {
+            if(match != null && textArr[newWord].indexOf(match[0]) > -1) {
                 linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//i)[1] + "\n";
                 linkCount++;
             }
