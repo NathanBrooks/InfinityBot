@@ -46,7 +46,7 @@ function parseCommand(message){
     if(fullCommand.length == 1 ||                                   // no name was specified
        fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
 
-        switch(fullCommand[0].toLowerCase) {
+        switch(fullCommand[0].toLowerCase()) {
             case "/confirm":
                 confirmed(message);
                 break;
