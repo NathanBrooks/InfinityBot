@@ -8,15 +8,16 @@ var api;
 var app;
 
 module.exports = {
-        moudle_name: module_name,
-        module_version: module_version,
-        module_settings: module_settings,
+    module_name: module_name,
+    module_version: module_version,
+    module_settings: module_settings,
 
     init: function(parent_api, parent_app) {
         api = parent_api;
         app = parent_app;
 
         api.on('message', handleMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -59,4 +60,9 @@ function parseMessage(message) {
             sendStickerProb('lewd', message.chat.id, message.message_id);
         }
     }
+}
+
+
+function rootpage(req, res) {
+    res.render('Sticker', {name: module_name, version: module_version});
 }

@@ -3,11 +3,13 @@ require('dotenv').config();
 /* libs and apis */
 var Telegram = require('telegram-bot-api');
 var chokidar = require('chokidar');
+var path     = require('path');
+var express  = require('express');
+var webapp   = express();
+var hbs      = require('express-handlebars');
 
 /* initialize telegram api */
-
 global.BotName = process.env.BOT_NAME;
-
 var api = new Telegram({
         token: process.env.TEL_API_KEY,
         updates: {
@@ -16,6 +18,8 @@ var api = new Telegram({
 });
 
 /* telegram api helpers */
+var module_list = [];
+
 global.SendMessage = function SendMessage(message, chat_id, reply) {
     if (message.split(/\s/) <= 1) {
         api.sendMessage({
@@ -45,10 +49,47 @@ global.SendSticker = function SendSticker(sticker_id, chat_id, reply) {
     });
 }
 
-/* file watcher stuff */
 
-var module_list = [];
+function compileNavbar() {
+	var returnVal = "";
+	for(var i in module_list) {
+		returnVal += "<li><a href=\"" + module_list[i].module_settings + "\">" + module_list[i].module_name + "</a></li>";
+	}
+	return returnVal;
+}
 
+/* handlebars support */
+handlebars = hbs.create({
+	layoutsDir   : 'http/views/layouts',
+	defaultLayout: 'main',
+	partialsDir  : [
+		'http/views/partials',
+	],
+	helpers: {
+		navbar: compileNavbar,
+	}
+});
+
+webapp.engine('handlebars', handlebars.engine);
+webapp.set('view engine', 'handlebars');
+webapp.set('views', 'http/views/layouts');
+
+/* Webserver */
+webapp.use('/share',express.static(path.join(__dirname, '/http/fonts')))
+webapp.use('/share',express.static(path.join(__dirname, '/http/css')));
+webapp.use('/share',express.static(path.join(__dirname, '/http/js')));
+webapp.get('/', function(req, res) {
+	res.render('home');
+});
+
+var server = webapp.listen(80, function() {
+	var host = server.address().address;
+	var port = server.address().port;
+
+	console.log("Web listening @ http://%s:%s", host, port);
+})
+
+/* file watcher */
 var watcher = chokidar.watch('./bot_modules', {
     ignored: /[\/\\]\./,
     persistent: true
@@ -56,13 +97,13 @@ var watcher = chokidar.watch('./bot_modules', {
 
 watcher.on('add', path => {
     module_list[path] = require('./' + path);
-    module_list[path].init(api, null);
+    module_list[path].init(api, webapp);
     console.log(path + " has been added");
 });
 
 watcher.on('unlink', path => {
 	delete require.cache[require.resolve('./' + path)];
     module_list[path].free();
-    module_list.splice(module_list.indexOf(path), 1);
+    delete module_list[path];
     console.log(path + " has been removed");
 });

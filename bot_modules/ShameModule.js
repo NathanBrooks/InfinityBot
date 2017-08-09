@@ -8,7 +8,7 @@ var api;
 var app;
 
 module.exports = {
-	moudle_name: module_name,
+	module_name: module_name,
 	module_version: module_version,
 	module_settings: module_settings,
 
@@ -17,6 +17,7 @@ module.exports = {
         app = parent_app;
 
         api.on('message', handleMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -63,4 +64,8 @@ console.log('shaming');
 	   console.log('sending');
 	global.SendMessage('For shame ' + shameShep[1] + '. For Shame.', message.chat.id);
    }
+}
+
+function rootpage(req, res) {
+    res.render('Shame', {name: module_name, version: module_version});
 }

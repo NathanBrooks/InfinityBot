@@ -8,7 +8,7 @@ var api;
 var app;
 
 module.exports = {
-	moudle_name: module_name,
+	module_name: module_name,
 	module_version: module_version,
 	module_settings: module_settings,
 
@@ -17,6 +17,7 @@ module.exports = {
         app = parent_app;
 
         api.on('message', handleMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -72,7 +73,7 @@ function roll(message) {
 
     var rollInfo = rollType[1].split(/d/gi);
 
-    if(rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) || isNaN(parseInt(rollInfo[1])))) {
+    if(rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) || isNaN(parseInt(rollInfo[1]))) || parseInt(rollInfo[0]) > 16777215 || parseInt(rollInfo[1]) > 16777215) {
         global.SendMessage('sorry, that is an invalid roll!', message.chat.id, message.message_id);
         return;
     }
@@ -104,3 +105,7 @@ function handleMessage(message) {
     }
 }
 */
+
+function rootpage(req, res) {
+    res.render('Chance', {name: module_name, version: module_version});
+}

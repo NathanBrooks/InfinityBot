@@ -8,7 +8,7 @@ var api;
 var app;
 
 module.exports = {
-	moudle_name: module_name,
+	module_name: module_name,
 	module_version: module_version,
 	module_settings: module_settings,
 
@@ -17,6 +17,7 @@ module.exports = {
         app = parent_app;
 
         api.on('message', handleMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -42,4 +43,8 @@ function handleMessage(message) {
 
         if (linkCount > 0) global.SendMessage(linkResult, message.chat.id, message.message_id);
     }
+}
+
+function rootpage(req, res) {
+    res.render('Reddit', {name: module_name, version: module_version});
 }

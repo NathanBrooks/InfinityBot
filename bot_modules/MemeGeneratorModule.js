@@ -10,7 +10,7 @@ var api;
 var app;
 
 module.exports = {
-	moudle_name: module_name,
+	module_name: module_name,
 	module_version: module_version,
 	module_settings: module_settings,
 
@@ -19,6 +19,7 @@ module.exports = {
         app = parent_app;
 
         api.on('message', handleMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -103,7 +104,7 @@ function generateMeme(message) {
 					mRes.on('end', function() {
 						var MG_FINAL = JSON.parse(finalBody);
 						if(MG_FINAL.success)
-							global.SendMessage(MG_FINAL.result.instanceImageUrl, message.chat.id, message.message_id);
+							global.SendMessage("http://db3.memegenerator.net/cache/instances/folder621/500x/" + MG_FINAL.result.instanceID + ".jpg" /*MG_FINAL.result.instanceImageUrl*/, message.chat.id, message.message_id);
 						else
 							global.SendMessage('Sorry, failed to generate your meme', message.chat.id, message.message_id);
 					})
@@ -116,4 +117,8 @@ function generateMeme(message) {
 	});
 
 
+}
+
+function rootpage(req, res) {
+    res.render('Meme', {name: module_name, version: module_version});
 }
