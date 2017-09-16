@@ -18,7 +18,7 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
@@ -67,9 +67,13 @@ function defineMessage(message) {
                 var definition = UD_SEARCH.list[0].definition;
                 var example = UD_SEARCH.list[0].example;
 
-                global.SendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, message.chat.id);
+                message.extras.is_reply = true;
+                api.sendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, message);
+                //global.SendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, message.chat.id);
             } else {
-                global.SendMessage('Could not define that word!', message.chat.id);
+                message.extras.is_reply = true;
+                api.sendMessage('Could not define that word!', message);
+                //global.SendMessage('Could not define that word!', message.chat.id);
             }
         });
     });

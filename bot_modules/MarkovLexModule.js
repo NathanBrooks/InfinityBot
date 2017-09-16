@@ -17,12 +17,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -133,7 +133,8 @@ function addWordTagless(generatedMessage, keyTags, keyWords, newTag, message, db
                             findTag(generatedMessage, keyTags, keyWords, message, db);
                         } else {
                             if(!err) {
-                                global.SendMessage(generatedMessage, message.chat.id, message.message_id);
+                                message.extras.is_reply = true;
+                                api.sendMessage(generatedMessage, message);
                                 db.close();
                             } else {
                             	console.log("error getting word aggregate: " + err);
@@ -154,7 +155,8 @@ function addWordTagless(generatedMessage, keyTags, keyWords, newTag, message, db
 
 function addWord(generatedMessage, keyTags, keyWords, newTag, message, db) {
     if(newTag == 'nothing') {
-        global.SendMessage(generatedMessage, message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage(generatedMessage, message);
         db.close();
     } else {
         db.collection('WordCollection', function(err, collection) {

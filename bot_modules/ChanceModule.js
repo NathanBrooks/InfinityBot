@@ -16,12 +16,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -57,9 +57,11 @@ function parseCommand(message){
 
 function flip(message) {
     if(Math.random() < .5) {
-        global.SendMessage('Coin toss result: Heads!', message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage('Coin toss result: Heads!', message);
     } else {
-        global.SendMessage('Coin toss result: Tails!', message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage('Coin toss result: Tails!', message);
     }
 }
 
@@ -67,14 +69,16 @@ function roll(message) {
     var rollType = message.text.split(/\s+/);
 
     if(rollType.length != 2) {
-        global.SendMessage('sorry, that is an invalid roll!', message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage('sorry, that is an invalid roll!', message);
         return;
     }
 
     var rollInfo = rollType[1].split(/d/gi);
 
     if(rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) || isNaN(parseInt(rollInfo[1]))) || parseInt(rollInfo[0]) > 16777215 || parseInt(rollInfo[1]) > 16777215) {
-        global.SendMessage('sorry, that is an invalid roll!', message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage('sorry, that is an invalid roll!', message);
         return;
     }
 
@@ -84,7 +88,8 @@ function roll(message) {
         rollSum += Math.floor(Math.random() * (rollInfo[1])) + 1;
     }
 
-    global.SendMessage('The result of rolling ' + rollInfo[0] + ' ' + rollInfo[1] + ' sided dice is: ' + rollSum, message.chat.id, message.message_id);
+    message.extras.is_reply = true;
+    api.sendMessage('The result of rolling ' + rollInfo[0] + ' ' + rollInfo[1] + ' sided dice is: ' + rollSum, message);
 }
 
 /*

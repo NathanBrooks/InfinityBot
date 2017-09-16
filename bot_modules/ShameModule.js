@@ -16,12 +16,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -58,11 +58,9 @@ function parseCommand(message){
 
 
 function shamed(message){
-console.log('shaming');
    var shameShep = message.text.split(/\s+/);
    if(shameShep.length > 1) {
-	   console.log('sending');
-	global.SendMessage('For shame ' + shameShep[1] + '. For Shame.', message.chat.id);
+	api.sendMessage('For shame ' + shameShep[1] + '. For Shame.', message);
    }
 }
 

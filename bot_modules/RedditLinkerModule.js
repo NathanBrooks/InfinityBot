@@ -16,12 +16,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -41,7 +41,10 @@ function handleMessage(message) {
             }
         }
 
-        if (linkCount > 0) global.SendMessage(linkResult, message.chat.id, message.message_id);
+        if (linkCount > 0) {
+            message.extras.is_reply = true;
+            api.sendMessage(linkResult, message);
+        }
     }
 }
 

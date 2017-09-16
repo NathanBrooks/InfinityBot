@@ -18,12 +18,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -103,20 +103,23 @@ function generateMeme(message) {
 
 					mRes.on('end', function() {
 						var MG_FINAL = JSON.parse(finalBody);
-						if(MG_FINAL.success)
-							global.SendMessage("http://db3.memegenerator.net/cache/instances/folder621/500x/" + MG_FINAL.result.instanceID + ".jpg" /*MG_FINAL.result.instanceImageUrl*/, message.chat.id, message.message_id);
-						else
-							global.SendMessage('Sorry, failed to generate your meme', message.chat.id, message.message_id);
-					})
+						if(MG_FINAL.success){
+                            message.extras.is_reply = true;
+							api.sendMessage("http://db3.memegenerator.net/cache/instances/folder621/500x/" + MG_FINAL.result.instanceID + ".jpg" /*MG_FINAL.result.instanceImageUrl*/, message);
+						} else {
+                            message.extras.is_reply = true;
+							api.sendMessage('Sorry, failed to generate your meme',message);
+					    }
+                    })
 				});
-			} else global.SendMessage('Sorry, failed to generate your meme', message.chat.id, message.message_id);
-
+            } else {
+                message.extras.is_reply = true;
+                api.sendMessage('Sorry, failed to generate your meme', message);
+            }
 		});
 	}).on('error', function(e) {
 		console.log('got an error in request');
 	});
-
-
 }
 
 function rootpage(req, res) {

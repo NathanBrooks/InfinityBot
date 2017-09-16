@@ -16,12 +16,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -58,11 +58,9 @@ function parseCommand(message){
 
 
 function confirmed(message){
-    if('reply_to_message' in message) {
-        global.SendMessage("I can confirm this!", message.chat.id, message.reply_to_message.message_id);
-    } else {
-        global.SendMessage("I can confirm this!", message.chat.id, message.message_id);
-    }
+    message.extras.is_reply_to_reply = true;
+    message.extras.is_reply = true;
+    api.sendMessage("I can confirm this!", message);
 }
 
 function rootpage(req, res) {

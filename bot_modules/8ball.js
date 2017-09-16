@@ -45,12 +45,12 @@ module.exports = {
         api = parent_api;
         app = parent_app;
 
-        api.on('message', handleMessage);
+        api.on('messageReceived', handleMessage);
         app.get(module_settings, rootpage);
     },
 
     free: function() {
-        api.removeListener('message', handleMessage);
+        api.removeListener('messageReceived', handleMessage);
 
         api = null;
         app = null;
@@ -88,9 +88,11 @@ function GetRandomInRange(max) {
 function SendEightBallResult(message){
     var result = EightBallResultList[Math.floor(Math.random() * (EightBallResultList.length-1))];
     if(result.indexOf('%s') >= 0) {
-        global.SendMessage(util.format(result, message.from.first_name), message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage(util.format(result, message.from_name), message);
     } else {
-        global.SendMessage(result, message.chat.id, message.message_id);
+        message.extras.is_reply = true;
+        api.sendMessage(result, message);
     }
 }
 
