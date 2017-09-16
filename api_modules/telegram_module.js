@@ -44,21 +44,19 @@ telegram.on('message', function(message) {
 });
 
 function sendMessage(message) {
-    /* handle extras */
-    var reply = false;
-    var reply_to = 0;
-    if('is_reply' in message.extras && message.extras.is_reply) {
-        reply = true;
-        reply_to = message.content.message_id;
-    }
+    if(message.client_id == client_id) {
+        /* handle extras */
+        var reply = false;
+        var reply_to = 0;
+        if('is_reply' in message.extras && message.extras.is_reply) {
+            reply = true;
+            reply_to = message.content.message_id;
+        }
 
-    if('is_reply_to_reply' in message.extras && message.extras.is_reply_to_reply && 'reply_to_message' in message.content) {
-        reply = true;
-        reply_to = message.content.reply_to_message.message_id;
-    }
-
-
-    if(message.client = client_id) {
+        if('is_reply_to_reply' in message.extras && message.extras.is_reply_to_reply && 'reply_to_message' in message.content) {
+            reply = true;
+            reply_to = message.content.reply_to_message.message_id;
+        }
         if (message.text.split(/\s/) <= 1) {
             telegram.sendMessage({
                 chat_id: message.content.chat.id,
