@@ -1,7 +1,7 @@
 'use strict';
 
 const module_name = "Confirmation Module"
-const module_version = "0.1"
+const module_version = "1.0"
 const module_settings = "/ConfirmationModule"
 
 var api;
@@ -64,5 +64,5 @@ function confirmed(message){
 }
 
 function rootpage(req, res) {
-    res.render('Confirm', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

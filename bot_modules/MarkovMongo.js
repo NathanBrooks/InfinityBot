@@ -1,9 +1,9 @@
 'use strict';
 
 
-const module_name = "Markov Lex Module"
-const module_version = "2.0"
-const module_settings = "/MarkovLexModule"
+const module_name = "Markov Module"
+const module_version = "1.0"
+const module_settings = "/MarkovModule"
 
 var api;
 var app;
@@ -162,5 +162,5 @@ function generateMessage(message) {
 }
 
 function rootpage(req, res) {
-    res.render('MarkovLex', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

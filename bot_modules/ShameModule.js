@@ -1,7 +1,7 @@
 'use strict';
 
 const module_name = "Shame Module"
-const module_version = "0.1"
+const module_version = "1.0"
 const module_settings = "/ShameModule"
 
 var api;
@@ -65,5 +65,5 @@ function shamed(message){
 }
 
 function rootpage(req, res) {
-    res.render('Shame', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

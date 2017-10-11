@@ -2,9 +2,9 @@
 
 var http = require('http');
 
-const module_name = "Admin Control"
+const module_name = "Urban Dictionary Module"
 const module_version = "1.0"
-const module_settings = "/AdminControl"
+const module_settings = "/UrbanDictionaryModule"
 
 var api;
 var app;
@@ -81,5 +81,5 @@ function defineMessage(message) {
 
 
 function rootpage(req, res) {
-    res.render('AdminControl', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

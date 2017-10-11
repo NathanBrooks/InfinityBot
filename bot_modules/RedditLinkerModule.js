@@ -49,5 +49,5 @@ function handleMessage(message) {
 }
 
 function rootpage(req, res) {
-    res.render('Reddit', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

@@ -3,8 +3,8 @@
 const util = require('util');
 
 const module_name = "8ball Module"
-const module_version = "0.1"
-const module_settings = "/8ball"
+const module_version = "1.0"
+const module_settings = "/8ballModule"
 
 var api;
 var app;
@@ -97,5 +97,5 @@ function SendEightBallResult(message){
 }
 
 function rootpage(req, res) {
-    res.render('8ball', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

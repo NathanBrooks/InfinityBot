@@ -31,35 +31,6 @@ ApiHandler.sendMessage = function(text, message) {
 
 global.BotName = process.env.BOT_NAME;
 
-// global.SendMessage = function SendMessage(message, chat_id, reply) {
-//     if (message.split(/\s/) <= 1) {
-//         api.sendMessage({
-//             chat_id: chat_id,
-//             text: "<Empty Message>",
-//             reply_to_message_id: (reply != null ? reply : undefined)
-//         });
-//     } else {
-//         var i = 0;
-//         while(i != message.length) {
-//             var tmp = i;
-//             i = Math.min(i + 4096, message.length);
-//             api.sendMessage({
-//                 chat_id: chat_id,
-//                 text: message.substring(tmp, i),
-//                 reply_to_message_id: (reply != null ? reply : undefined)
-//             });
-//         }
-//     }
-// }
-
-// global.SendSticker = function SendSticker(sticker_id, chat_id, reply) {
-//     api.sendSticker({
-//         chat_id: chat_id,
-//         sticker: sticker_id,
-//         reply_to_message_id: (reply != null ? reply : undefined)
-//     });
-// }
-
 var module_list = [];
 
 function compileNavbar() {

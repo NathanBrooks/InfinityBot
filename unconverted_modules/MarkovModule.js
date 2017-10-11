@@ -239,5 +239,5 @@ function printList(list) {
 }
 
 function rootpage(req, res) {
-    res.render('Markov', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

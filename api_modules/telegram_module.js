@@ -1,6 +1,6 @@
 const module_name = 'Telegram Api'
 const module_version = '1.0'
-const module_settings = '/Telegram'
+const module_settings = '/TelegramAPI'
 const client_id = 'Telegram'
 
 var api;
@@ -17,6 +17,7 @@ module.exports = {
         app = parent_app;
 
         api.on('messageSend', sendMessage);
+        app.get(module_settings, rootpage);
     },
 
     free: function() {
@@ -76,4 +77,8 @@ function sendMessage(message) {
             }
         }
     }
+}
+
+function rootpage(req, res) {
+    res.render('root', {name: module_name, version: module_version});
 }

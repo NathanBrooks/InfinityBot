@@ -98,5 +98,5 @@ function AdminSend(messageText) {
 }
 
 function rootpage(req, res) {
-    res.render('AdminControl', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

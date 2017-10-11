@@ -64,5 +64,5 @@ function parseMessage(message) {
 
 
 function rootpage(req, res) {
-    res.render('Sticker', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }

@@ -266,5 +266,5 @@ function generateMessage(message) {
 }
 
 function rootpage(req, res) {
-    res.render('MarkovLex', {name: module_name, version: module_version});
+    res.render('root', {name: module_name, version: module_version});
 }
