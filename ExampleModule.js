@@ -25,6 +25,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/example - Reply with example message\n\n';
     }
 };
 

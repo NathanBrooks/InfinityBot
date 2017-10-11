@@ -27,6 +27,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/wiki <term/phrase> - Get wikipedia extract of <term/phrase>\n\n';
     }
 };
 

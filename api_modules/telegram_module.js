@@ -25,6 +25,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '';
     }
 }
 

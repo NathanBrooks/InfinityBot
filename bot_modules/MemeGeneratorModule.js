@@ -27,6 +27,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/mg <search term> : <line 1> : <line2> - Generate a meme\n\n';
     }
 };
 

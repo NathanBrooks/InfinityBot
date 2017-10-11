@@ -32,6 +32,36 @@ ApiHandler.sendMessage = function(text, message) {
 global.BotName = process.env.BOT_NAME;
 
 var module_list = [];
+var help_list = [];
+
+/* master commands */
+ApiHandler.on('messageReceived', function(message) {
+    if('text' in message) {
+        var paramList = message.text.split(/\s+/);                              // split on spaces to get a list of parameters
+        var fullCommand = paramList[0].split(/@/);                              // split the first 'word' to support /command@botname
+        if(fullCommand.length == 1 ||                                           // no name was specified
+           fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {      // check if the command was meant for us
+
+            switch(fullCommand[0].toLowerCase()) {                              // just to be safe
+                case "/help":
+                    sendHelp(message);                                    // always pass original message so ougoing api calls work properly
+                    break;
+                default: ;
+            }
+        }
+    }
+});
+
+function sendHelp(message) {
+    var helpOutput = '\n/help - This help message\n\n';
+
+    for (var i in help_list) {
+        if (help_list[i] != '') {
+            helpOutput += help_list[i];
+        }
+    }
+    ApiHandler.sendMessage(helpOutput, message);
+}
 
 function compileNavbar() {
     var returnVal = "";
@@ -81,6 +111,7 @@ var watcher = chokidar.watch(['./bot_modules', './api_modules'], {
 watcher.on('add', path => {
     module_list[path] = require('./' + path);
     module_list[path].init(ApiHandler, webapp);
+    help_list[path] = module_list[path].commandList();
     console.log(path + " has been added");
 });
 
@@ -88,5 +119,6 @@ watcher.on('unlink', path => {
 	delete require.cache[require.resolve('./' + path)];
     module_list[path].free();
     delete module_list[path];
+    delete help_list[path];
     console.log(path + " has been removed");
 });

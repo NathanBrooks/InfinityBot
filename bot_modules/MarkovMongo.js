@@ -26,6 +26,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/generate - Generate a message\n\n';
     }
 };
 

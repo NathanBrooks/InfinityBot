@@ -25,6 +25,11 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/roll <#1>d<#2> - Roll <#1> <#2> sided dice\n\n'
+        + '/flip - Flip a coin\n\n';
     }
 };
 

@@ -25,6 +25,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/confirm - Confirm something (reply to a message to confirm that message)\n\n';
     }
 };
 

@@ -27,6 +27,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/define <term/phrase> - Look up <term/phrase> on Urban Dictionary\n\n';
     }
 };
 

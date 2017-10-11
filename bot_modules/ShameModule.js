@@ -25,6 +25,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/shame <username> - Shames that user\n\n';
     }
 };
 

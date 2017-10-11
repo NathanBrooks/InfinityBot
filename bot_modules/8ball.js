@@ -54,6 +54,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return '/8ball - Ask the magic 8ball a question\n\n';
     }
 };
 

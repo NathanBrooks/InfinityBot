@@ -25,6 +25,10 @@ module.exports = {
 
         api = null;
         app = null;
+    },
+
+    commandList: function() {
+        return 'reddit linker - Identifies subreddits mentioned and provides a link to it\n\n';
     }
 };
 
