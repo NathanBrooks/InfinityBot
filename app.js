@@ -1,17 +1,26 @@
 
-/* libs and apis */
-require('dotenv').config();
-var chokidar = require('chokidar');
-var path     = require('path');
-var express  = require('express');
-var session  = require('express-session');
-var webapp   = express();
-var hbs      = require('express-handlebars');
-var events   = require('events');
-var passport = require('passport');
-var googleSt = require('passport-google-oauth2').Strategy;
+/* Libs and APIs */
+require('dotenv').config();                                     // used for secure user info
+var events   = require('events');                               // events used for inter module communication
 
-/* API Handler */
+/* File Monitor Support */
+var chokidar = require('chokidar');                             // file watcher
+var path     = require('path');
+
+/* Web Server Support */
+var express  = require('express');                              // express web server
+var session  = require('express-session');                      // express session handler
+var webapp   = express();                                       // main express app handler
+var hbs      = require('express-handlebars');                   // express handlebars middlewware
+var passport = require('passport');                             // passport support for user credentials
+var googleSt = require('passport-google-oauth2').Strategy;      // google oauth2 support for passport
+
+global.BotName = process.env.BOT_NAME;                          // TODO: Get rid of this, just use the process call directly
+
+var module_list = [];                                           // module handles
+var help_list = [];                                             // list of commands and descriptions given by modules TODO: use module_list directly
+
+/* Module Comms Handler */
 var ApiHandler = new events.EventEmitter();
 ApiHandler.setMaxListeners(50);
 
@@ -23,8 +32,27 @@ ApiHandler.Message = function(client_id, text, from_name, content, extras) {
     this.extras = extras;
 }
 
+ApiHandler.ReceivedEvent = function() {
+    this.isCommand      = false;
+    this.paramList      = [];
+    this.fullCommand    = [];
+    this.message        = {};
+}
+
 ApiHandler.receiveMessage = function(message) {
-    this.emit('messageReceived', message);
+    var newEvent = new ApiHandler.ReceivedEvent();
+    if(message) {
+        newEvent.paramList = message.text.split(/\s+/);                              // split on spaces to get a list of parameters
+        newEvent.fullCommand = newEvent.paramList[0].split(/@/);                              // split the first 'word' to support /command@botname
+        if(newEvent.fullCommand.length == 1 ||                                           // no name was specified
+           newEvent.fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {
+            newEvent.isCommand = true;
+        } else {
+            newEvent.isCommand = false;
+        }
+        newEvent.message = message;
+    }
+    this.emit('messageReceived', newEvent);
 }
 
 ApiHandler.sendMessage = function(text, extras, message) {
@@ -35,25 +63,14 @@ ApiHandler.sendMessage = function(text, extras, message) {
     this.emit('messageSend', outgoingMessage);
 }
 
-global.BotName = process.env.BOT_NAME;
-
-var module_list = [];
-var help_list = [];
-
-/* master commands */
-ApiHandler.on('messageReceived', function(message) {
-    if('text' in message) {
-        var paramList = message.text.split(/\s+/);                              // split on spaces to get a list of parameters
-        var fullCommand = paramList[0].split(/@/);                              // split the first 'word' to support /command@botname
-        if(fullCommand.length == 1 ||                                           // no name was specified
-           fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {      // check if the command was meant for us
-
-            switch(fullCommand[0].toLowerCase()) {                              // just to be safe
-                case "/help":
-                    sendHelp(message);                                    // always pass original message so ougoing api calls work properly
-                    break;
-                default: ;
-            }
+/* Master Commands */
+ApiHandler.on('messageReceived', function(receivedEvent) {
+    if(receivedEvent.isCommand) {
+        switch(receivedEvent.fullCommand[0].toLowerCase()) {                              // just to be safe
+            case "/help":
+                sendHelp(receivedEvent.message);                                    // always pass original message so ougoing api calls work properly
+                break;
+            default: ;
         }
     }
 });
@@ -69,6 +86,8 @@ function sendHelp(message) {
     ApiHandler.sendMessage(helpOutput, null, message);
 }
 
+
+/* WEB SUPPORT */
 function compileNavbar() {
     var returnVal = "";
 
@@ -198,12 +217,13 @@ webapp.get('/test', function(req, res) {
 });
 
 
-var server = webapp.listen(80, function() {                                      // I really don't like that I made this global, but I don't want to update every modules init function
-    var host = server.address().address;                                            // should actually be safe to pass in init because nothing else is looking at it...
+var server = webapp.listen(80, function() {
+    var host = server.address().address;
     var port = server.address().port;
 
     console.log("Web listening @ http://%s:%s", host, port);
 })
+
 
 /* file watcher */
 var watcher = chokidar.watch(['./bot_modules', './api_modules'], {
@@ -219,7 +239,7 @@ watcher.on('add', path => {
 });
 
 watcher.on('unlink', path => {
-	delete require.cache[require.resolve('./' + path)];
+    delete require.cache[require.resolve('./' + path)];
     module_list[path].free();
     delete module_list[path];
     delete help_list[path];

@@ -34,6 +34,21 @@ module.exports = {
     }
 };
 
+function handleMessage(receivedEvent){
+    if(receivedEvent.isCommand) {
+        checkMood(receivedEvent.message);
+        switch(receivedEvent.fullCommand[0].toLowerCase()) {
+            case "/mood":
+                sendCurrentMood(receivedEvent.message);
+                break;
+            default: ;
+        }
+    } else {
+        updateMood(receivedEvent.message);
+        checkMood(receivedEvent.message);
+    }
+}
+
 var Responses = [];
 Responses['pos'] = [
     "You are the best, %s!"
@@ -59,33 +74,6 @@ var apiOptions = function(text) {
     this.headers = apiHeaders,
     this.form = { 'text' : text }
 };
-
-function handleMessage(message){
-    if('text' in message) {
-        if(message.text[0] == '/') {
-            checkMood(message);
-            parseCommand(message);
-        } else {
-            updateMood(message);
-            checkMood(message);
-        }
-    }
-}
-
-function parseCommand(message){
-    var paramList = message.text.split(/\s+/);
-    var fullCommand = paramList[0].split(/@/);
-    if(fullCommand.length == 1 ||                                   // no name was specified
-       fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
-
-        switch(fullCommand[0].toLowerCase()) {
-            case "/mood":
-                sendCurrentMood(message);
-                break;
-            default: ;
-        }
-    }
-}
 
 function sendCurrentMood(message) {
     var response = "\nCurrent Mood: " + sCurrentMood + "\n" +

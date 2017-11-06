@@ -32,22 +32,25 @@ module.exports = {
     }
 };
 
-function handleMessage(message) {
-    if('text' in message) {
-        var linkCount = 0;
-        var linkResult = "";
-        var textArr = message.text.split(/\s+/);
-        for(var newWord in textArr) {
-	    var match = textArr[newWord].match(/^\/r\/|^r\//i);
-            if(match != null && textArr[newWord].indexOf(match[0]) > -1) {
-                linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//i)[1] + "\n";
-                linkCount++;
-            }
-        }
+function handleMessage(receievedEvent) {
+    if(!receievedEvent.isCommand) {
+        checkForReddit(receievedEvent.message);
+    }
+}
 
-        if (linkCount > 0) {
-            api.sendMessage(linkResult, {is_reply : true}, message);
+function checkForReddit(message) {
+    var linkCount = 0;
+    var linkResult = "";
+    var textArr = message.text.split(/\s+/);
+    for(var newWord in textArr) {
+    var match = textArr[newWord].match(/^\/r\/|^r\//i);
+        if(match != null && textArr[newWord].indexOf(match[0]) > -1) {
+            linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//i)[1] + "\n";
+            linkCount++;
         }
+    }
+    if (linkCount > 0) {
+        api.sendMessage(linkResult, {is_reply : true}, message);
     }
 }
 

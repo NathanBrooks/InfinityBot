@@ -40,43 +40,21 @@ var Lexer = new pos.Lexer();
 var Tagger = new pos.Tagger();
 
 
-function handleMessage(message){
-    if('text' in message) {
-        if(message.text[0] == '/') {
-            parseCommand(message);
-        } else {
-            buildChain(message);
-        }
-    }
-}
-
-function parseCommand(message) {
-    var paramList = message.text.toLowerCase().split(/\s+/);
-    var fullCommand = paramList[0].split(/@/);
-	if(fullCommand.length == 1 || 									// no name was specified
- 	   fullCommand[1].toLowerCase() == BotName.toLowerCase()) {     // check if the command was meant for us
-
-    	switch(fullCommand[0].toLowerCase()) {
-       		case "/generate":
-
-                if(paramList.length > 1) {
-                    var input = paramList.splice(1,2);
-                    generateMessage(message, input);
+function handleMessage(receivedEvent) {
+    if(receivedEvent.isCommand) {
+        switch(receivedEvent.fullCommand[0].toLowerCase()) {
+            case "/generate":
+                if(receivedEvent.paramList.length > 1) {
+                    var input = receivedEvent.paramList.splice(1,2);
+                    generateMessage(receivedEvent.message, input);
                 } else {
-                    generateMessage(message);
+                    generateMessage(receivedEvent.message);
                 }
-       	    	break;
-            case "/generatev":
-                generateMessage(message);
-                break
-            case "/ndlte" :
-                //deleteCollections();
                 break;
-            case "/lowercase":
-                //updateDatabase();
-                break;
-       		default: ;
-    	}
+            default: ;
+        }
+    } else {
+        buildChain(receivedEvent.message);
     }
 }
 

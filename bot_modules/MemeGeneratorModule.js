@@ -34,26 +34,14 @@ module.exports = {
     }
 };
 
-function handleMessage(message) {
-	if('text' in message) {
-        if(message.text[0] == '/') {
-            parseCommand(message);
+function handleMessage(receivedEvent) {
+    if(receivedEvent.isCommand){
+        switch(receivedEvent.fullCommand[0].toLowerCase()) {
+            case "/mg":
+                generateMeme(receivedEvent.message);
+                break;
+            default: ;
         }
-    }
-}
-
-function parseCommand(message) {
-    var paramList = message.text.split(/\s+/);
-    var fullCommand = paramList[0].split(/@/);
-	if(fullCommand.length == 1 || 									// no name was specified
- 	   fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
-
-    	switch(fullCommand[0].toLowerCase()) {
-       		case "/mg":
-       	    	generateMeme(message);
-       	    	break;
-       		default: ;
-    	}
     }
 }
 

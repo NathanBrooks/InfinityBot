@@ -33,27 +33,14 @@ module.exports = {
     }
 };
 
-
-function handleMessage(message){
-    if('text' in message) {
-        if(message.text[0] == '/') {
-            parseCommand(message);
-        }
-    }
-}
-
-function parseCommand(message){
-    var paramList = message.text.split(/\s+/);
-    var fullCommand = paramList[0].split(/@/);
-    if(fullCommand.length == 1 ||                                   // no name was specified
-       fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {     // check if the command was meant for us
-
-        switch(fullCommand[0].toLowerCase()) {
+function handleMessage(receivedEvent) {
+    if(receivedEvent.isCommand) {
+        switch(receivedEvent.fullCommand[0].toLowerCase()) {
             case "/roll":
-                roll(message);
+                roll(receivedEvent.message);
                 break;
             case "/flip":
-                flip(message);
+                flip(receivedEvent.message);
                 break;
             default: ;
         }
