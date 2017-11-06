@@ -44,8 +44,8 @@ ApiHandler.receiveMessage = function(message) {
     if(message) {
         newEvent.paramList = message.text.split(/\s+/);                              // split on spaces to get a list of parameters
         newEvent.fullCommand = newEvent.paramList[0].split(/@/);                              // split the first 'word' to support /command@botname
-        if(newEvent.fullCommand.length == 1 ||                                           // no name was specified
-           newEvent.fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {
+        if(message.text[0] == '/' && (newEvent.fullCommand.length == 1 ||                                           // no name was specified
+           newEvent.fullCommand[1].toLowerCase() == global.BotName.toLowerCase())) {
             newEvent.isCommand = true;
         } else {
             newEvent.isCommand = false;

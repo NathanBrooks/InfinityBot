@@ -4,7 +4,7 @@ var util = require('util');
 
 const module_name = "Mood Module"
 const module_version = "0.1"
-const module_settings = "/StickerModule"
+const module_settings = "/MoodModule"
 
 var api;
 var app;
