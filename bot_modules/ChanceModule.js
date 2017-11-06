@@ -62,11 +62,9 @@ function parseCommand(message){
 
 function flip(message) {
     if(Math.random() < .5) {
-        message.extras.is_reply = true;
-        api.sendMessage('Coin toss result: Heads!', message);
+        api.sendMessage('Coin toss result: Heads!', {is_reply : true}, message);
     } else {
-        message.extras.is_reply = true;
-        api.sendMessage('Coin toss result: Tails!', message);
+        api.sendMessage('Coin toss result: Tails!', {is_reply : true}, message);
     }
 }
 
@@ -74,16 +72,14 @@ function roll(message) {
     var rollType = message.text.split(/\s+/);
 
     if(rollType.length != 2) {
-        message.extras.is_reply = true;
-        api.sendMessage('sorry, that is an invalid roll!', message);
+        api.sendMessage('sorry, that is an invalid roll!', {is_reply : true}, message);
         return;
     }
 
     var rollInfo = rollType[1].split(/d/gi);
 
     if(rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) || isNaN(parseInt(rollInfo[1]))) || parseInt(rollInfo[0]) > 16777215 || parseInt(rollInfo[1]) > 16777215) {
-        message.extras.is_reply = true;
-        api.sendMessage('sorry, that is an invalid roll!', message);
+        api.sendMessage('sorry, that is an invalid roll!', {is_reply : true}, message);
         return;
     }
 
@@ -93,29 +89,9 @@ function roll(message) {
         rollSum += Math.floor(Math.random() * (rollInfo[1])) + 1;
     }
 
-    message.extras.is_reply = true;
-    api.sendMessage('The result of rolling ' + rollInfo[0] + ' ' + rollInfo[1] + ' sided dice is: ' + rollSum, message);
+    api.sendMessage('The result of rolling ' + rollInfo[0] + ' ' + rollInfo[1] + ' sided dice is: ' + rollSum, {is_reply : true}, message);
 }
-
-/*
-function handleMessage(message) {
-    if('text' in message) {
-        var linkCount = 0;
-        var linkResult = "";
-        var textArr = message.text.split(/\s+/);
-        for(var newWord in textArr) {
-	    var match = textArr[newWord].match(/^\/r\/|^r\//i);
-            if(match != null && textArr[newWord].indexOf(match[0]) > -1) {
-                linkResult += "http://www.reddit.com/r/" + textArr[newWord].split(/r\//i)[1] + "\n";
-                linkCount++;
-            }
-        }
-
-        if (linkCount > 0) global.SendMessage(linkResult, message.chat.id, message.message_id);
-    }
-}
-*/
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

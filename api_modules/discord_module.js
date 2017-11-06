@@ -33,7 +33,6 @@ module.exports = {
 }
 
 const Discord = require('discord.js');
-const speak = require('simple-tts');
 const fs = require('fs');
 const discord_client = new Discord.Client();
 
@@ -49,6 +48,7 @@ discord_client.on('message', function(message) {
     		message.member.voiceChannel.leave();
     	}
     	var newMessage = new api.Message(client_id, message.content, message.author.username, message, {});
+        Object.freeze(newMessage);
     	api.receiveMessage(newMessage);
     }
 });
@@ -61,15 +61,14 @@ function sendMessage(message) {
 	        reply = true;
 	    }
 
-
 		var voiceChannel = message.content.member.voiceChannel;
 		if(voiceChannel && voiceChannel.connection) {
-	    	message.content.channel.send(message.text, {tts: true});
-			//speak(" \"" + message.text.replace(/[\\"']/g, ' ').replace(/\u0000/g, '') + " \"", {format:'mp3', filename:'./' + message.content.id, lang:'en-uk-rp'});
-			//var dispatcher = voiceChannel.connection.playFile('./' + message.content.id + '.mp3');
-			//dispatcher.on('end', function(end){
-			//	fs.unlinkSync('./' + message.content.id + '.mp3');
-			//});
+            var output = 'Empty Message';
+            if (message.text.length > 1) {
+                output = message.text;
+            }
+
+	    	message.content.channel.send(output, {tts: true});
 		} else {
 			if(reply) {
 	    		message.content.reply(message.text);
@@ -81,5 +80,5 @@ function sendMessage(message) {
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

@@ -46,12 +46,11 @@ function handleMessage(message) {
         }
 
         if (linkCount > 0) {
-            message.extras.is_reply = true;
-            api.sendMessage(linkResult, message);
+            api.sendMessage(linkResult, {is_reply : true}, message);
         }
     }
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

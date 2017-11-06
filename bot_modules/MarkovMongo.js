@@ -2,7 +2,7 @@
 
 
 const module_name = "Markov Module"
-const module_version = "1.0"
+const module_version = "1.1"
 const module_settings = "/MarkovModule"
 
 var api;
@@ -51,14 +51,20 @@ function handleMessage(message){
 }
 
 function parseCommand(message) {
-    var paramList = message.text.split(/\s+/);
+    var paramList = message.text.toLowerCase().split(/\s+/);
     var fullCommand = paramList[0].split(/@/);
 	if(fullCommand.length == 1 || 									// no name was specified
  	   fullCommand[1].toLowerCase() == BotName.toLowerCase()) {     // check if the command was meant for us
 
     	switch(fullCommand[0].toLowerCase()) {
        		case "/generate":
-                generateMessage(message);
+
+                if(paramList.length > 1) {
+                    var input = paramList.splice(1,2);
+                    generateMessage(message, input);
+                } else {
+                    generateMessage(message);
+                }
        	    	break;
             case "/generatev":
                 generateMessage(message);
@@ -66,9 +72,35 @@ function parseCommand(message) {
             case "/ndlte" :
                 //deleteCollections();
                 break;
+            case "/lowercase":
+                //updateDatabase();
+                break;
        		default: ;
     	}
     }
+}
+
+function updateDatabase() {
+    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
+        if(!err) {
+            console.log('found database');
+            db.collection('WordCollection', function(err, collection) {
+                if(!err) {
+                    console.log('finding');
+                    collection.find().forEach(function(e) {
+                        e.context = e.context.toLowerCase();
+                        e.context = e.context.replace('**ignore**', '**IGNORE**');
+                        console.log('lowercase: ' + e.context);
+                        collection.save(e);
+                    });
+                } else {
+                    console.log('something went wrong: ' + err);
+                }
+            });
+        } else {
+            console.log('could not connect to databse: ' + err);
+        }
+   });
 }
 
 function deleteCollections() {
@@ -95,7 +127,7 @@ function buildChain(message) {
 
                 WordCol.update({context : keyWords.join(), nextWord : newWord, tag : newTag}, {$inc: { count: 1}}, {upsert : true});
                 keyWords.shift();
-                keyWords.push(newWord);
+                keyWords.push(newWord.toLowerCase());
             }
             WordCol.update({context : keyWords.join(), nextWord : '**IGNORE**', tag : 'null'}, {$inc: { count : 1}}, {upsert : true});
         }
@@ -125,46 +157,63 @@ function addWord(generatedMessage, keyWords, message, db) {
                                     if (newWord != '**IGNORE**') {
                                         generatedMessage += (newWord + ' ');
                                         keyWords.shift();
-                                        keyWords.push(newWord);
+                                        keyWords.push(newWord.toLowerCase());
                                         addWord(generatedMessage, keyWords, message, db);
                                     } else {
-                                        message.extras.is_reply = true;
-                                        api.sendMessage(generatedMessage, message);
+                                        api.sendMessage(generatedMessage, {is_reply : true}, message);
                                         db.close();
                                     }
                                     break;
                                 }
                             }
                         } else {
-                            console.log('error getting tag aggregate: ' + err);
-                            console.log('response: ' + resp);
-                            db.close();
+                            if(!err) {
+                                api.sendMessage(generatedMessage, {is_reply : true}, message);
+                                db.close();
+                            } else {
+                                console.log('error getting tag aggregate: ' + err);
+                                api.sendMessage('error getting tag aggregate: ' + err, {is_reply : true}, message);
+                                db.close();
+                            }
                         }
                     });
                 } else {
                     console.log('Error going to array: ' + err);
+                    api.sendMessage('Error going to array: ' + err, {is_reply : true}, message);
                     db.close();
                 }
             });
         } else {
             console.log('Error finding word: ' + err);
+            api.sendMessage('Error finding word: ' + err, {is_reply : true}, message);
             db.close();
         }
     });
 }
 
 
-function generateMessage(message) {
+function generateMessage(message, input) {
     MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
         if(!err) {
-            addWord('', new Array(2).fill('**IGNORE**'), message, db);
+            if(typeof input != 'undefined' && Array.isArray(input)) {
+                var initialMessage = input.join(' ');
+                initialMessage += ' ';
+
+                while(input.length < 2) {
+                    input.unshift('**IGNORE**');
+                }
+                addWord(initialMessage, input, message, db);
+            } else {
+                addWord('', new Array(2).fill('**IGNORE**'), message, db);
+            }
         } else {
             console.log("error connecting to database: " + err);
+            api.sendMessage("error connecting to database: " + err, {is_reply : true}, message);
             db.close();
         }
     });
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

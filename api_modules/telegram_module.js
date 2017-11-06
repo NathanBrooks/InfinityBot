@@ -44,6 +44,7 @@ var telegram = new telegramApi({
 telegram.on('message', function(message) {
     if('text' in message) {
         var newMessage = new api.Message(client_id, message.text, message.from.first_name, message, {});
+        Object.freeze(newMessage);
         api.receiveMessage(newMessage);
     }
 });
@@ -84,5 +85,5 @@ function sendMessage(message) {
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

@@ -92,14 +92,12 @@ function GetRandomInRange(max) {
 function SendEightBallResult(message){
     var result = EightBallResultList[Math.floor(Math.random() * (EightBallResultList.length-1))];
     if(result.indexOf('%s') >= 0) {
-        message.extras.is_reply = true;
-        api.sendMessage(util.format(result, message.from_name), message);
+        api.sendMessage(util.format(result, message.from_name), {is_reply : true}, message);
     } else {
-        message.extras.is_reply = true;
-        api.sendMessage(result, message);
+        api.sendMessage(result, {is_reply : true}, message);
     }
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

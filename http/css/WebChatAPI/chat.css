@@ -1,0 +1,33 @@
+#wrapper {
+}
+
+#content {
+    width: calc(100vw - 20px);
+    height: 70vh;
+    margin-left: 10px;
+    margin-right: 10px;
+    overflow-y: scroll;
+    border: 2px solid black;
+}
+
+#text {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#input {
+    width: calc(100vw - 20px);
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+/*
+
+#field {
+    width: 88vw;
+}
+
+#send {
+    width: 10vw;
+}
+*/

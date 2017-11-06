@@ -76,19 +76,17 @@ function wiki(message) {
                         '\n\n' +
                         results.query.pages[results.query.pageids[0]].extract;
 
-                        message.extras.is_reply = true;
-                        api.sendMessage(answer, message);
+                        api.sendMessage(answer, {is_reply : true}, message);
                         return
                     }
                 }
             }
 
-            message.extras.is_reply = true;
-            api.sendMessage("Could not find an entry for that", message);
+            api.sendMessage("Could not find an entry for that", {is_reply : true}, message);
         });
     });
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

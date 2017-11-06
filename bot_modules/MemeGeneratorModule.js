@@ -108,17 +108,14 @@ function generateMeme(message) {
 					mRes.on('end', function() {
 						var MG_FINAL = JSON.parse(finalBody);
 						if(MG_FINAL.success){
-                            message.extras.is_reply = true;
-							api.sendMessage("http://db3.memegenerator.net/cache/instances/folder621/500x/" + MG_FINAL.result.instanceID + ".jpg" /*MG_FINAL.result.instanceImageUrl*/, message);
+							api.sendMessage("http://db3.memegenerator.net/cache/instances/folder621/500x/" + MG_FINAL.result.instanceID + ".jpg" /*MG_FINAL.result.instanceImageUrl*/, {is_reply : true}, message);
 						} else {
-                            message.extras.is_reply = true;
-							api.sendMessage('Sorry, failed to generate your meme',message);
+							api.sendMessage('Sorry, failed to generate your meme', {is_reply : true},message);
 					    }
                     })
 				});
             } else {
-                message.extras.is_reply = true;
-                api.sendMessage('Sorry, failed to generate your meme', message);
+                api.sendMessage('Sorry, failed to generate your meme', {is_reply : true}, message);
             }
 		});
 	}).on('error', function(e) {
@@ -127,5 +124,5 @@ function generateMeme(message) {
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

@@ -64,10 +64,10 @@ function parseCommand(message){
 function shamed(message){
    var shameShep = message.text.split(/\s+/);
    if(shameShep.length > 1) {
-	api.sendMessage('For shame ' + shameShep[1] + '. For Shame.', message);
+	api.sendMessage('For shame ' + shameShep[1] + '. For Shame.', null, message);
    }
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

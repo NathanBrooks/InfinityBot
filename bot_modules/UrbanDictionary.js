@@ -71,12 +71,10 @@ function defineMessage(message) {
                 var definition = UD_SEARCH.list[0].definition;
                 var example = UD_SEARCH.list[0].example;
 
-                message.extras.is_reply = true;
-                api.sendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, message);
+                api.sendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, {is_reply : true}, message);
                 //global.SendMessage(word + ":\n\n" + definition + "\n\nExample:\n\n" + example, message.chat.id);
             } else {
-                message.extras.is_reply = true;
-                api.sendMessage('Could not define that word!', message);
+                api.sendMessage('Could not define that word!', {is_reply : true}, message);
                 //global.SendMessage('Could not define that word!', message.chat.id);
             }
         });
@@ -85,5 +83,5 @@ function defineMessage(message) {
 
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }

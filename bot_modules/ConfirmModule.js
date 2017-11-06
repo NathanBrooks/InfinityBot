@@ -62,11 +62,9 @@ function parseCommand(message){
 
 
 function confirmed(message){
-    message.extras.is_reply_to_reply = true;
-    message.extras.is_reply = true;
-    api.sendMessage("I can confirm this!", message);
+    api.sendMessage("I can confirm this!", {is_reply : true, is_reply_to_reply : true}, message);
 }
 
 function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
 }
