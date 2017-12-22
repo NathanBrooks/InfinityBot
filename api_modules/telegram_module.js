@@ -43,7 +43,7 @@ var telegram = new telegramApi({
 
 telegram.on('message', function(message) {
     if('text' in message) {
-        var newMessage = new api.Message(client_id, message.text, message.from.first_name, message, {});
+        var newMessage = new api.Message(client_id, client_id + message.from.id + message.chat.id, message.text, message.from.first_name, message, {});
         Object.freeze(newMessage);
         api.receiveMessage(newMessage);
     }

@@ -33,9 +33,7 @@ module.exports = {
 };
 
 function handleMessage(receievedEvent) {
-    if(!receievedEvent.isCommand) {
-        checkForReddit(receievedEvent.message);
-    }
+    checkForReddit(receievedEvent.message);
 }
 
 function checkForReddit(message) {

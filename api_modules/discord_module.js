@@ -47,7 +47,14 @@ discord_client.on('message', function(message) {
     	} else if (message.content.toLowerCase() == '/leavechannel' && message.member.voiceChannel && message.member.voiceChannel.connection) {
     		message.member.voiceChannel.leave();
     	}
-    	var newMessage = new api.Message(client_id, message.content, message.author.username, message, {});
+
+
+        var strippedMessage = {
+            'messageID' : message.id,
+            'channelID' : message.channel.id
+        }
+
+    	var newMessage = new api.Message(client_id, client_id + message.author.id + message.channel.id, message.content, message.author.username, strippedMessage, {});
         Object.freeze(newMessage);
     	api.receiveMessage(newMessage);
     }
@@ -55,27 +62,32 @@ discord_client.on('message', function(message) {
 
 function sendMessage(message) {
     if(message.client_id == client_id) {
-	    /* handle extras */
-	    var reply = false;
-	    if('is_reply' in message.extras && message.extras.is_reply) {
-	        reply = true;
-	    }
+        /* handle extras */
+        var reply = false;
+        if('is_reply' in message.extras && message.extras.is_reply) {
+            reply = true;
+        }
 
-		var voiceChannel = message.content.member.voiceChannel;
-		if(voiceChannel && voiceChannel.connection) {
-            var output = 'Empty Message';
-            if (message.text.length > 1) {
-                output = message.text;
-            }
+        if(discord_client.channels.has(message.content.channelID)) {
+            discord_client.channels.get(message.content.channelID).fetchMessage(message.content.messageID).then(function(result) {
+                var voiceChannel = result.member.voiceChannel;
+                if(voiceChannel && voiceChannel.connection) {
+                    var output = 'Empty Message';
+                    if (message.text.length > 1) {
+                        output = message.text;
+                    }
 
-	    	message.content.channel.send(output, {tts: true});
-		} else {
-			if(reply) {
-	    		message.content.reply(message.text);
-			} else {
-	    		message.content.channel.send(message.text);
-			}
-		}
+                    result.channel.send(output, {tts: true});
+                } else {
+                    if(reply) {
+                        result.reply(message.text);
+                    } else {
+                        result.channel.send(message.text);
+                    }
+                }
+
+            }).catch(console.err);
+        }
     }
 }
 

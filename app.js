@@ -24,8 +24,9 @@ var help_list = [];                                             // list of comma
 var ApiHandler = new events.EventEmitter();
 ApiHandler.setMaxListeners(50);
 
-ApiHandler.Message = function(client_id, text, from_name, content, extras) {
+ApiHandler.Message = function(client_id, uid, text, from_name, content, extras) {
     this.client_id = client_id;
+    this.uid = uid;
     this.text = text;
     this.from_name = from_name;
     this.content = content;
@@ -58,7 +59,7 @@ ApiHandler.receiveMessage = function(message) {
 ApiHandler.sendMessage = function(text, extras, message) {
     extras ? extras : extras = {}
 
-    var outgoingMessage = new ApiHandler.Message(message.client_id, text, process.env.BOT_DISPLAY_NAME, message.content, extras)
+    var outgoingMessage = new ApiHandler.Message(message.client_id, message.uid, text, process.env.BOT_DISPLAY_NAME, message.content, extras)
 
     this.emit('messageSend', outgoingMessage);
 }

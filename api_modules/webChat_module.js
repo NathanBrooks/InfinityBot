@@ -44,7 +44,7 @@ function handleSocket (socket) {
     socket.emit('message', { message: 'Welcome to ' + process.env.BOT_DISPLAY_NAME });
     socket.on('send', function(data) {
         if(data && 'message' in data) {
-            var newMessage = new api.Message(client_id, data.message, 'Web User', socket, {});
+            var newMessage = new api.Message(client_id, 0, data.message, 'Web User', socket, {});
             Object.freeze(newMessage);
             api.receiveMessage(newMessage);
         }
