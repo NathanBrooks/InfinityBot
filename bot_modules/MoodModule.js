@@ -1,140 +1,170 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
-var request = require('request');
-var util = require('util');
 
-const module_name = "Mood Module"
-const module_version = "0.1"
-const module_settings = "/MoodModule"
+/* Module Requirements */
+const request = require('request');
+const util = require('util');
 
-var api;
-var app;
+/* Module Setup */
+const NAME = 'Mood Module';
+const VERSION = '1.0';
+const URI = '/MoodModule';
+
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
+
+// module specific variables
+const RESPONSES = {
+  'pos': [
+    'You are the best, %s',
+    `You make everyone's day better, %s`
+  ],
+  'neg': [
+    'You are the worst, %s',
+    'Fuck you, %s'
+  ]
+};
+
+const APIHEADERS = {
+  'User-Agent':   'Chat Bot/1.0',
+  'Content-Type': 'application/json'
+}
+
+const MOODSIZE = 1.0;
+const MOODSCALE = .05;
+var currentMood = 0.0;
+var currentMoodString = 'neutral';
+
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/Mood - Respond with current mood and stats\n\n';
-    }
+  getCommands: () => {
+    return '/mood - Respond with current mood and stats\n\n';
+  }
 };
 
-function handleMessage(receivedEvent){
-    if(receivedEvent.isCommand) {
-        checkMood(receivedEvent.message);
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/mood":
-                sendCurrentMood(receivedEvent.message);
-                break;
-            default: ;
-        }
-    } else {
-        updateMood(receivedEvent.message);
-        checkMood(receivedEvent.message);
-    }
+function receiveMessage(receivedEvent) {
+
 }
 
-var Responses = [];
-Responses['pos'] = [
-    "You are the best, %s!"
-]
-Responses['neg'] = [
-    "You are the worst, %s!"
-]
+var apiOptions = (text) => {
+  var optionsObject = {}
 
-var iCurrentMood = 0.0; // (-5,5) = neutral, (6,10) = positive, (-6, -10) = negative
-var sCurrentMood = 'neutral';
-const moodSize = 1.0;
-const moodScale = .05;
+  optionsObject.url='http://text-processing.com/api/sentiment/';
+  optionsObject.method = 'POST';
+  optionsObject.headers = APIHEADERS;
+  optionsObject.form = { 'text' : text };
 
-
-var apiHeaders = {
-    'User-Agent':   'Chat Bot/1.0',
-    'Content-Type': 'application/json'
+  return optionsObject;
 }
-
-var apiOptions = function(text) {
-    this.url='http://text-processing.com/api/sentiment/',
-    this.method = 'POST',
-    this.headers = apiHeaders,
-    this.form = { 'text' : text }
-};
 
 function sendCurrentMood(message) {
-    var response = "\nCurrent Mood: " + sCurrentMood + "\n" +
-    "i: " + iCurrentMood;
-    api.sendMessage(response, {is_reply : true}, message);
-}
+  var response = '\nCurrent Mood: ' + currentMoodString + '\n' +
+    'i: ' + currentMood;
 
-function runningAverage(avg, input) {
-    avg -= avg / samples;
-    avg += input / samples;
-
-    return avg;
+  apiHandler.sendMessage(response, {is_reply: true}, message);
 }
 
 function checkMood(message) {
-    if(sCurrentMood != 'neutral') {
-        if(Math.random() < (Math.abs(Math.abs(iCurrentMood) - moodSize/2)) * moodScale) {
-            var result = Responses[sCurrentMood][Math.floor(Math.random() * (Responses[sCurrentMood].length-1))];
+  if (currentMoodString != 'neutral') {
+    if (Math.random() < (Math.abs(Math.abs(currentMood) - MOODSIZE / 2)) *
+        moodScale) {
+      // get message
+      var result = RESPONSES[currentMoodString][Math.floor(Math.random() *
+        (RESPONSES[currentMoodString].length-1))];
 
-            // send message
-            if(result.indexOf('%s') >= 0)
-                api.sendMessage(util.format(result, message.from_name), {is_reply : true}, message);
-            else
-                api.sendMessage(util.format(result, message.from_name), {is_reply : true}, message);
-        }
+      // send message
+      api.sendMessage(util.format(result, message.fromName), {isReply: true},
+        message);
     }
+  }
 }
 
 function updateMood(message) {
-    var newOptions = new apiOptions(message.text);
+  var newOptions = new apiOptions(message.text);
 
-    request(newOptions, function(err, resp, body) {
-        if(!err && resp.statusCode == 200) {
-            var  moodInfo = JSON.parse(body);
-            if(moodInfo) {
-                if('probability' in moodInfo && 'label' in moodInfo) {
-                    switch(moodInfo.label) {
-                        case 'pos':
-                            iCurrentMood = Math.min(iCurrentMood + moodInfo.probability[moodInfo.label], moodSize);
-                            if(iCurrentMood > moodSize/2) sCurrentMood = 'pos';
-                            break;
-                        case 'neutral':
-                            if(iCurrentMood > 0)
-                                iCurrentMood -= moodInfo.probability[moodInfo.label];
-                            else if(iCurrentMood < 0)
-                                iCurrentMood += moodInfo.probability[moodInfo.label];
-                            if(iCurrentMood <= moodSize/2 && iCurrentMood >= -moodSize/2) sCurrentMood = 'neutral';
-                            break;
-                        case 'neg':
-                            iCurrentMood = Math.max(iCurrentMood - moodInfo.probability[moodInfo.label], -moodSize);
-                            if(iCurrentMood < -moodSize/2) sCurrentMood = 'neg';
-                            break;
-                    }
-                } else {
-                    console.log('failed to get mood info');
-                }
-            }
+  request(newOptions, (err, resp, body) => {
+    if (err) {
+      console.log('failed to get mood info');
+    } else if (resp.statusCode == 200) {
+      // parse the json response
+      var moodInfo = JSON.parse(body);
+
+      // update info
+      if(moodInfo) {
+        if ('probability' in moodInfo && 'label' in moodInfo) {
+          switch (moodInfo.label) {
+            case 'pos': // positive message
+              currentMood = Math.min(currentMood +
+                moodInfo.probability[moodInfo.label], MOODSIZE);
+              if (currentMood > MOODSIZE / 2) { // if we are over threshold
+                currentMoodString = 'pos';
+              }
+              break;
+            case 'neutral': // neutral message
+              // move towards center of spectrum
+              if (currentMood > 0) {
+                currentMood -= moodInfo.probability[moodInfo.label];
+              } else if (currentMood < 0) {
+                currentMood += moodInfo.probability[moodInfo.label];
+              }
+              // if we are over threshold, change
+              if (currentMood <= MOODSIZE / 2 && currentMood >= -MOODSIZE / 2) {
+                currentMoodString = 'neutral';
+              }
+              break;
+            case 'neg': // negative message
+              currentMood = Math.max(currentMood -
+                moodInfo.probability[moodInfo.label], -MOODSIZE);
+              if (currentMood < -MOODSIZE/2) { // if we are over threshold
+                currentMoodString = 'neg';
+              }
+              break;
+            default:;
+          }
         }
-    });
+      } else {
+        console.log('failed to parse mood info');
+      }
+    }
+  });
 }
 
-function rootpage(req, res) {
-    res.render('root', {name: module_name, version: module_version});
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

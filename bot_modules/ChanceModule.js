@@ -1,84 +1,109 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
 
-const module_name = "Chance Module"
-const module_version = "1.1"
-const module_settings = "/ChanceModule"
+/* Module Requirements */
 
-var api;
-var app;
+/* Module Setup */
+const NAME = 'Chance Module';
+const VERSION = '1.0'
+const URI = '/ChanceModule'
+
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-	module_name: module_name,
-	module_version: module_version,
-	module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/roll <#1>d<#2> - Roll <#1> <#2> sided dice\n\n'
-        + '/flip - Flip a coin\n\n';
-    }
+  getCommands: () => {
+    return `/roll <#1>d<#2> - Roll <#1> <#2> sided dice\n
+/flip - Flip a coin\n\n`;
+  },
 };
 
-function handleMessage(receivedEvent) {
-    if(receivedEvent.isCommand) {
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/roll":
-                roll(receivedEvent.message);
-                break;
-            case "/flip":
-                flip(receivedEvent.message);
-                break;
-            default: ;
-        }
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch (receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/roll':
+        roll(receivedEvent.message);
+        break;
+      case '/flip':
+        flip(receivedEvent.message);
+        break;
+      default:;
     }
-}
-
-function flip(message) {
-    if(Math.random() < .5) {
-        api.sendMessage('Coin toss result: Heads!', {is_reply : true}, message);
-    } else {
-        api.sendMessage('Coin toss result: Tails!', {is_reply : true}, message);
-    }
+  }
 }
 
 function roll(message) {
-    var rollType = message.text.split(/\s+/);
+  var rollType = message.text.split(/\s+/);
 
-    if(rollType.length != 2) {
-        api.sendMessage('sorry, that is an invalid roll!', {is_reply : true}, message);
-        return;
-    }
+  if (rollType.length != 2) {
+    apiHandler.sendMessage('Sorry, that is an invalid roll!', {isReply: true},
+      message);
+    return;
+  }
 
-    var rollInfo = rollType[1].split(/d/gi);
+  var rollInfo = rollType[1].split(/d/gi);
 
-    if(rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) || isNaN(parseInt(rollInfo[1]))) || parseInt(rollInfo[0]) > 16777215 || parseInt(rollInfo[1]) > 16777215) {
-        api.sendMessage('sorry, that is an invalid roll!', {is_reply : true}, message);
-        return;
-    }
+  if (rollInfo.length != 2 || (isNaN(parseInt(rollInfo[0])) ||
+    isNaN(rollInfo[1])) || parseInt(rollInfo[0]) > 16777215 ||
+    parseInt(rollInfo[1]) > 16777215) {
+      apiHandler.sendMessage('Sorry, that is an invalid roll!', {isReply: true},
+        message);
+  }
 
-    var rollSum = 0;
+  var rollSum = 0;
 
-    for(var i=0; i<parseInt(rollInfo[0]); i++) {
-        rollSum += Math.floor(Math.random() * (rollInfo[1])) + 1;
-    }
+  for(var i=0; i < parseInt(rollInfo[0]); i++) {
+    rollSum += Math.floor(Math.random() * (rollInfo[1])) + 1;
+  }
 
-    api.sendMessage('The result of rolling ' + rollInfo[0] + ' ' + rollInfo[1] + ' sided dice is: ' + rollSum, {is_reply : true}, message);
+  apiHandler.sendMessage(`The result of rolling ${rollInfo[0]} ${rollInfo[1]} ` +
+   `sided dice is: ${rollSum}`, {isReply: true}, message);
 }
 
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+function flip(message) {
+  if(Math.random() < .5) {
+    apiHandler.sendMessage('Coin toss result: Heads!', {isReply: true}, message);
+  } else {
+    apiHandler.sendMessage('Coin toss result: Tails!', {isReply: true}, message);
+  }
+}
+
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

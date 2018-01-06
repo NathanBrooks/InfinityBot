@@ -1,85 +1,107 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
-var request = require('request');
 
+/* Module Requirements */
+const request = require('request');
 
-const module_name = "Joke Module"
-const module_version = "1.0"
-const module_settings = "/JokeModule"
+/* Module Setup */
+const NAME = "Joke Module"
+const VERSION = "1.0"
+const URI = "/JokeModule"
 
-var api;
-var app;
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/dadjoke - send a random dad joke\n\n' +
-                '/norrisjoke - send a random Chuck Norris joke\n\n';
-    }
+  getCommands: () => {
+    return ` /dadjoke - send a random dad joke\n
+/norrisjoke - send a random Chuck Norris joke\n\n`;
+  }
 };
 
-function handleMessage(receivedEvent) {
-    if(receivedEvent.isCommand) {
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/dadjoke":
-                sendJoke(dadJokeApi, receivedEvent.message);
-                break;
-            case "/norrisjoke":
-                sendJoke(norrisJokeApi, receivedEvent.message);
-                break;
-            default: ;
-        }
-    }
-}
-
-const dadJokeApi = {
+const DADJOKEAPI = {
     url:'https://icanhazdadjoke.com/',
     headers: {
         'Accept' : 'application/json'
     }
 };
 
-const norrisJokeApi = {
+const NORRISJOKEAPI = {
     url:'https://api.chucknorris.io/jokes/random'
 }
 
-
-function sendJoke(options, message) {
-    request(options, function(err, res, body) {
-        if(err) {
-            api.sendMessage(err, {is_reply:true}, message);
-        } else if (res && res.statusCode !== 200) {
-            api.sendMessage('Failed to get dad joke.', {is_reply:true}, message);
-        } else {
-            var response = JSON.parse(body);
-            if('value' in response) {
-                api.sendMessage(response.value, {is_reply:true}, message); // handle norris resposne
-            } else if ('joke' in response) {
-                api.sendMessage(response.joke, {is_reply:true}, message); // handle dad response
-            } else {
-                api.sendMessage('unknown joke json format', {is_reply:true}, message);
-            }
-        }
-    });
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch (receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/dadjoke':
+        sendJoke(DADJOKEAPI, receivedEvent.message);
+        break;
+      case '/norrisjoke':
+        sendJoke(NORRISJOKEAPI, receivedEvent.message);
+        break;
+      default:;
+    }
+  }
 }
 
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+function sendJoke(options, message) {
+  request(options, (err, res, body) => {
+    if (err) {
+      console.log(err);
+    } else if (res && res.statusCode !== 200) {
+      console.log('failed to get joke.');
+    } else {
+      var response = JSON.parse(body);
+      var joke = 'Joke capture failed.';
+
+      if ('value' in response) { // norris joke
+        joke = response.value;
+      }
+
+      if ('joke' in response) { // dad joke
+        joke = response.joke;
+      }
+      apiHandler.sendMessage(joke, {is_reply: true}, message);
+    }
+  });
+}
+
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

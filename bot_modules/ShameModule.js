@@ -1,55 +1,76 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
 
-const module_name = "Shame Module"
-const module_version = "1.0"
-const module_settings = "/ShameModule"
+/* Module requirements */
 
-var api;
-var app;
+/* Module Setup */
+const NAME = 'Shame Module';
+const VERSION = '1.0';
+const URI = '/ShameModule';
+
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-	module_name: module_name,
-	module_version: module_version,
-	module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/shame <username> - Shames that user\n\n';
-    }
+  getCommands: () => {
+    return '/shame <username> - Shames that user\n\n';
+  },
 };
 
-function handleMessage(receivedEvent) {
-    if(receivedEvent.isCommand) {
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/shame":
-                shamed(receivedEvent.message);
-                break;
-            default: ;
-        }
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch(receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/shame':
+        shameUser(receivedEvent.message);
+        break;
+      default:;
     }
+  }
 }
 
-function shamed(message){
-   var shameShep = message.text.split(/\s+/);
-   if(shameShep.length > 1) {
-	api.sendMessage('For shame ' + shameShep[1] + '. For Shame.', null, message);
-   }
+function shameUser(message) {
+  var shameShep = message.text.split(/\s+/);
+  if (shameShep.length > 1) {
+    api.sendMessage(`For shame ${shameShep[1]}. For Shame.`, null, message);
+  }
 }
 
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

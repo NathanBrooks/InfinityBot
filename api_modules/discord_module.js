@@ -1,96 +1,105 @@
-const module_name = 'Discord Api'
-const module_version = '1.0'
-const module_settings = '/DiscordAPI'
-const client_id = 'Discord'
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-var api;
-var app;
+'use strict';
+
+/* module requirements */
+const discord = require('discord.js');
+const fs = require('fs');
+
+/* module setup */
+const NAME = 'Discord Api';
+const VERSION = '1.0';
+const URI = '/DiscordAPI';
+const CLIENTID = 'Discord';
+
+// these will be initialized
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
-    module_client: client_id,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
+  clientID: CLIENTID,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageSend', sendMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('sendMessage', sendMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageSend', sendMessage);
+  free: () => {
+    apiHandler.removeListener('sendMEssage', sendMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '';
-    }
+  getCommands: () => {
+    return '';
+  }
 }
 
-const Discord = require('discord.js');
-const fs = require('fs');
-const discord_client = new Discord.Client();
+var discordClient = new discord.Client();
+discordClient.login(process.env.DISCORD_API_KEY);
 
-discord_client.login(process.env.DISCORD_API_KEY);
+discordClient.on('message', (message) => {
+  var strippedMessage = {
+    'messageID': message.id,
+    'channelID': message.channel.id
+  }
 
-discord_client.on('message', function(message) {
-    if(message.author.id != discord_client.user.id) {
-        message.guild.members.get(discord_client.user.id).setNickname(process.env.BOT_DISPLAY_NAME);
-    	if(message.content.toLowerCase() == '/joinchannel' && message.member.voiceChannel) {
-    		var voiceChannel = message.member.voiceChannel;
-    		voiceChannel.join();
-    	} else if (message.content.toLowerCase() == '/leavechannel' && message.member.voiceChannel && message.member.voiceChannel.connection) {
-    		message.member.voiceChannel.leave();
-    	}
+  var newMessage = new apiHandler.Message(CLIENTID, CLIENTID +
+      message.author.id + message.channel.id, message.content,
+      message.author.username, strippedMessage, {});
 
-
-        var strippedMessage = {
-            'messageID' : message.id,
-            'channelID' : message.channel.id
-        }
-
-    	var newMessage = new api.Message(client_id, client_id + message.author.id + message.channel.id, message.content, message.author.username, strippedMessage, {});
-        Object.freeze(newMessage);
-    	api.receiveMessage(newMessage);
-    }
+  Object.freeze(newMessage); // freeze so that no modules change it
+  apiHandler.receiveMessage(newMessage);
 });
 
 function sendMessage(message) {
-    if(message.client_id == client_id) {
-        /* handle extras */
-        var reply = false;
-        if('is_reply' in message.extras && message.extras.is_reply) {
-            reply = true;
-        }
-
-        if(discord_client.channels.has(message.content.channelID)) {
-            discord_client.channels.get(message.content.channelID).fetchMessage(message.content.messageID).then(function(result) {
-                var voiceChannel = result.member.voiceChannel;
-                if(voiceChannel && voiceChannel.connection) {
-                    var output = 'Empty Message';
-                    if (message.text.length > 1) {
-                        output = message.text;
-                    }
-
-                    result.channel.send(output, {tts: true});
-                } else {
-                    if(reply) {
-                        result.reply(message.text);
-                    } else {
-                        result.channel.send(message.text);
-                    }
-                }
-
-            }).catch(console.err);
-        }
+  if(message.clientID == CLIENTID) {
+    /* handle extras */
+    var reply = false
+    if ('is_reply' in message.extras && message.extras.is_reply) {
+      reply = true;
     }
+
+    if (discordClient.channels.has(message.content.channelID)) {
+      discordClient.channels.get(message.content.channelID).fetchMessage(
+          message.content.messageID).then((result) => {
+            var output = 'Empty Message';
+            if (message.text.length > 0) {
+              output = message.text
+            }
+
+            if(reply) {
+              result.reply(message.text);
+            } else {
+              result.channel.send(message.text);
+            }
+          }).catch(console.err);
+    }
+  }
 }
 
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

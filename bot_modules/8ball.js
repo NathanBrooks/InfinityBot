@@ -1,91 +1,105 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
 
+/* Module Requirements */
 const util = require('util');
 
-const module_name = "8ball Module"
-const module_version = "1.0"
-const module_settings = "/8ballModule"
+/* Module Setup */
+const NAME = '8ball Module';
+const VERSION = "1.0";
+const URI = '/8ballModule';
 
-var api;
-var app;
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
-var EightBallResultList = [
-    "Yes, %s.",
-    "It is certain!",
-    "Without a doubt!",
-    "You can rely on it!",
-    "Maybe?",
-    "Yes",
-    "All signs point to yes!",
-    "No...",
-    "Are you kidding me, %s?",
-    "Did you seriously just ask me that %s?",
-    "Alright, see what you did here, %s, is seriously fuck up. Like, I cant even figure out how to answer this without literally vomiting",
-    "Fuck no, get out of here with your shit, %s",
-    "Aww, poor little %s having to come to me with their problems. \"No\" you bitch!",
-    "Yes.\n\n I mean no!",
-    "Answer unclear, please send a dollar to @FelixNox for a clearer answer.",
-    "My sources say no. They also say you are a terrible person. Thats funny, I didn't even ask them that!",
-    "Yes, definitely... unless its no",
-    "Yes, %s, but you have to... {The rest of this answer is behind a paywall, send a dollar to @TheBestFoxo}",
-    "Maybe, but more importantly, did you know that underground is the only word in the english language that starts with und and ends with und?",
-    "HAHAHA. Everyone look at this guy! %s actually thought I would answer him!",
-    "For sure!",
-    "%s.... I mean, you are my best friend, but I got some bad news for you... No.",
-    "Yes.\n\n What? Did you expect something funny? Complain to @TheBestFoxo to add more answers.",
-    "Nope."
+// module specific variables
+var eightBallResponses = [
+'Yes.',
+'No.',
+'Maybe?',
+'You can rely on it!',
+'How should I know?',
+'Definitely not.',
+'Are you crazy, %s, of course I am going to say no!',
+'The fuck are you on about now, %s? No.',
+'You are my favorite %s, so yes ^^',
+'All signs point to yes!',
+'Get out of here with your shit, %s! No!',
+'My Sources say no. They also say you are a terrible person. That is funny,' +
+  ' I did\'t even ask them that.',
+'Maybe, but more importantly, did you know that underground is the only word' +
+  ' in the english language that starts with und and ends with und?',
+'HAHAHA. Everyone look at this guy! %s actually thought I would answer him!',
 ]
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/8ball - Ask the magic 8ball a question\n\n';
-    }
-};
-
-function handleMessage(receivedEvent) {
-    if(receivedEvent.isCommand) {
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/8ball":
-                SendEightBallResult(receivedEvent.message);
-                break;
-            default: ;
-        }
-    }
+  getCommands: () => {
+    return '/8ball - Ask the magic 8ball a question\n\n';
+  },
 }
 
-function GetRandomInRange(max) {
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch (receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/8ball':
+        sendEightBallAnswer(receivedEvent.message);
+        break;
+      default:;
+    }
+  }
+}
+
+function getRandomInRage(max) {
   max = Math.floor(max);
   return Math.floor(Math.random() * max);
 }
 
-function SendEightBallResult(message){
-    var result = EightBallResultList[Math.floor(Math.random() * (EightBallResultList.length-1))];
-    if(result.indexOf('%s') >= 0) {
-        api.sendMessage(util.format(result, message.from_name), {is_reply : true}, message);
-    } else {
-        api.sendMessage(result, {is_reply : true}, message);
-    }
+function sendEightBallAnswer(message) {
+  var result = eightBallResponses[getRandomInRage(eightBallResponses.length-1)];
+  if (result.indexOf('%s') >= 0) {
+    api.sendMessage(util.format(result, message.from_name), {isReply: true},
+      message);
+  } else {
+    api.sendMessage(result, {isReply: true}, message);
+  }
 }
 
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

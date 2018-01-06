@@ -1,220 +1,105 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
+
+/* Module Requirements */
 var request = require('request');
-var MongoDB = require('mongodb').MongoClient;
 
-const module_name = "Cat Facts Module"
-const module_version = "1.0"
-const module_settings = "/CatFactsModule"
+/* Module Setup */
+const NAME = 'Cat Facts Module'
+const VERSION = '1.0'
+const URI = '/CatFactsModule'
 
-var api;
-var app;
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        /* TODO: restart timers */
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-        api.on('messageReceived', handleMessage);
-        app.get(module_settings, rootpage);
-    },
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-    free: function() {
-        api.removeListener('messageReceived', handleMessage);
+    apiHandler = null;
+    webApp = null;
+  },
 
-        api = null;
-        app = null;
-    },
-
-    commandList: function() {
-        return '/catfact - send a random Cat Fact\n\n' +
-                '/subscribe - subscribe to Cat Facts\n\n' +
-                '/unsubscribe - unsubscribe from Cat Facts\n\n';
-    }
+  getCommands: () => {
+    return '/catfact - send a random Cat Fact\n\n';
+  },
 };
 
-function handleMessage(receivedEvent) {
-    if(receivedEvent.isCommand) {
-        switch(receivedEvent.fullCommand[0].toLowerCase()) {
-            case "/catfact":
-                catFact(receivedEvent.message);
-                break;
-            case "/subscribe":
-                subscribe(receivedEvent.message);
-                break;
-            case "/unsubscribe":
-                unsubscribe(receivedEvent.message);
-                break;
-            case "/ndlte":
-                cleanDatabase();
-                break;
-            case "/debug":
-                listUsers();
-                break;
-            default: ;
-        }
-    } else {
-        checkAnswer(receivedEvent.message);
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch (receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/catfact':
+        sendCatFact(receivedEvent.message);
+        break;
+      default:;
     }
+  }
 }
 
-var catFactApi = {
+const CATFACTAPI = {
     url:'https://catfact.ninja/fact'
 }
 
-function catFact(message, is_reply) {
-    request(catFactApi, function(err, res, body) {
-        if(err) {
-            api.sendMessage(err, {is_reply: is_reply}, message);
-        } else if (res && res.statusCode !== 200) {
-            api.sendMessage("Failed to get Cat Fact.", {is_reply: is_reply}, message);
-        } else {
-            var response = JSON.parse(body);
-            if(response && 'fact' in response) {
-                api.sendMessage("Cat Fact: " + response.fact, {is_reply: is_reply}, message);
-            } else {
-                api.sendMessage("Received Improper JSON response.", {is_reply: is_reply}, message);
-            }
+function getCatFact() {
+  return new Promise((resolve, reject) => {
+    request(CATFACTAPI, (err, res, body) => {
+      if (err) {
+        reject(err);
+      } else if (res && res.statusCode !== 200) {
+        reject('Failed to get CatFact.');
+      } else {
+        try {
+          var parsedResponse = JSON.parse(body);
+          if(parsedResponse && 'fact' in parsedResponse) {
+            resolve(parsedResponse);
+          } else {
+            reject('Invalid response from cat facts.');
+          }
+        } catch (e) {
+          reject(e);
         }
+      }
     });
+  });
 }
 
-function AddUser(message) {
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            var CatUsers = db.collection('CatUsers');
-            CatUsers.update({}, {UID: message.uid, subscription: true, message: message}, {upsert : true});
-        } else { console.log(err); }
-        if(db) { db.close(); }
-    });
+function sendCatFact(message) {
+  getCatFact().then((fact) => {
+    apiHandler.sendMessage('Cat Fact: \n' + fact, {isReply: true}, message);
+  }).catch((err) => {
+    apiHandler.sendMessage(err.toString(), {isReply: true}, message);
+  });
 }
 
-function RemoveUser(message) {
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            var CatUsers = db.collection('CatUsers');
-            CatUsers.update({UID: message.uid}, {subscription: false}, {upsert : true});
-        } else { console.log(err); }
-        if(db) { db.close(); }
-    });
-}
-
-var callMessages = [
-    "INCORRECT. Your favorite animal is the cat. Reply unsubscribe to stop.",
-    "Command not recognized. Please let us know you are human by completing the following sentence: Your favorite animal is the {blank}.",
-    "Command not recognized. You will continue to be subscribed to Cat Facts! Reply cancel to stop.",
-]
-
-var responseMessages = [
-    "unsubscribe",
-    "noResp",
-    "cancel",
-]
-
-function subscribe(message) {
-    api.sendMessage("Thank you for subscribing to Cat Facts! You will receive hourly updates!", {is_reply: true}, message);
-    AddUser(message);
-    catFact(message, true);
-}
-
-var unsubscribeUsers = {};
-
-
-function unsubCall(message) {
-    if(unsubscribeUsers[message.uid] !== undefined) {
-        unsubscribeUsers[message.uid]--;
-        if(unsubscribeUsers[message.uid] == -1) {
-            unsubscribeUsers[message.uid] = undefined;
-            RemoveUser(message);
-            api.sendMessage("You have sucessfully unsubscribed from Cat Facts :(", {is_reply: true}, message);
-        } else {
-            api.sendMessage(callMessages[unsubscribeUsers[message.uid]], {is_reply: true}, message);
-        }
-    } else {
-        api.sendMessage("You are not currently unsubscribing and should not receive this message!", {is_reply: true}, message);
-    }
-}
-
-function checkAnswer(message) {
-    if(unsubscribeUsers[message.uid] !== undefined) {
-        if(message.text.toLowerCase() === responseMessages[unsubscribeUsers[message.uid]] || responseMessages[unsubscribeUsers[message.uid]] === "noResp") {
-            unsubCall(message);
-        } else {
-            unsubscribeUsers[message.uid] = undefined;
-            api.sendMessage("Re-confirming subscription to cat facts! You will continue to receive hourly updates!", {is_reply: true}, message);
-            catFact(message, true);
-        }
-    }
-}
-
-function unsubscribe(message) {
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            db.collection('CatUsers').find({UID: message.uid}).toArray(function(err, result) {
-                if(!err) {
-                    if(result && result.length > 0) {
-                        if(result[0].subscription) {
-                            unsubscribeUsers[message.uid] = callMessages.length;
-                            unsubCall(message);
-                        }
-                    } else {
-                        api.sendMessage("You are not currently subscribed to Cat Facts! Please send /subscribe to join!", {is_reply: true}, message);
-                    }
-                }
-            });
-        }
-        if(db) { db.close(); }
-    });
-}
-
-function massCatFact() {
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            db.collection('CatUsers', function(err, collection) {
-                collection.find().forEach(function(e) {
-                    if(e.subscription) {
-                        catFact(e.message, false);
-                    }
-                });
-                setTimeout(massCatFact, 3600000);
-            });
-        } else { console.log(err); }
-        if(db) { db.close(); }
-    });
-}
-massCatFact();
-
-function cleanDatabase() {
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            console.log("deleting");
-            db.collection('CatUsers').remove();
-        } else { console.log(err); }
-        if(db) { db.close(); }
-    });
-}
-
-function listUsers() {
-    console.log('listing users');
-    MongoDB.connect(process.env.MONGO_DATABASE, function(err, db) {
-        if(!err) {
-            db.collection('CatUsers', function(err, collection) {
-                collection.find().forEach(function(e) {
-                    console.log("User: " + e.UID + " subscription: " + e.subscription);
-                });
-            });
-        } else { console.log(err); }
-        if(db) { db.close(); }
-    })
-}
-
-
-
-function rootpage(req, res) {
-    res.render('root', app.getOptions(req, {name: module_name, version: module_version}));
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }

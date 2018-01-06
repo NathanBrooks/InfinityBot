@@ -1,60 +1,73 @@
+/*
+ * Copyright 2018 Nathan Tyler Brooks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
 
-const module_name = "Example Module"                                        // module name (for title of webpage and debug)
-const module_version = "1.0"                                                // version number
-const module_settings = "/ExampleModule"                                    // root webpage location
+/* Module Requirements */
 
-var api;
-var app;
+/* Module Setup */
+const NAME = 'Example Module'
+const VERSION = '1.0'
+const URI = '/ExampleModule'
+
+// these will be initialized in module.exports.init
+var apiHandler = null;
+var webApp = null;
 
 module.exports = {
-    module_name: module_name,
-    module_version: module_version,
-    module_settings: module_settings,
+  name: NAME,
+  version: VERSION,
+  uri: URI,
 
-    init: function(parent_api, parent_app) {
-        api = parent_api;
-        app = parent_app;
+  init: (parentBotApi, parentWebApp) => {
+    apiHandler = parentBotApi;
+    webApp = parentWebApp;
 
-        api.on('messageReceived', handleMessage);                           // attach to infinity bot message api
-        app.get(module_settings, rootpage);                                 // attach to infinity bot web server
-    },
+    apiHandler.on('receiveMessage', receiveMessage);
+    webApp.get(URI, getRootPage);
+  },
 
-    free: function() {
-        api.removeListener('message', handleMessage);                       // detach when removing
+  free: () => {
+    apiHandler.removeListener('receiveMessage', receiveMessage);
 
-        api = null;
-        app = null;
-    },
+    apiHandler = null;
+    webApp = null;
+  },
 
-    commandList: function() {
-        return '/example - Reply with example message\n\n';
-    }
+  getCommands: () => {
+    return '/example - Reply with example message\n\n';
+  },
 };
 
-function handleMessage(message){
-    if('text' in message) {                                                 // check that its a valid message (more of a holdover from when this was just telegram)
-        parseCommand(message);
+function receiveMessage(receivedEvent) {
+  if (receivedEvent.isCommand) {
+    switch (receivedEvent.fullCommand[0].toLowerCase()) {
+      case '/example':
+        exampleCommand(receivedEvent.message);
+        break;
+      default:;
     }
-}
-
-function parseCommand(message){
-    var paramList = message.text.split(/\s+/);                              // split on spaces to get a list of parameters
-    var fullCommand = paramList[0].split(/@/);                              // split the first 'word' to support /command@botname
-    if(fullCommand.length == 1 ||                                           // no name was specified
-       fullCommand[1].toLowerCase() == global.BotName.toLowerCase()) {      // check if the command was meant for us
-
-        switch(fullCommand[0].toLowerCase()) {                              // just to be safe
-            case "/example":
-                exampleCommand(message);                                    // always pass original message so ougoing api calls work properly
-                break;
-            default: ;
-        }
-    }
+  }
 }
 
 function exampleCommand(message) {
-    // special attributes can be attached to the message.extras attribute
-    // they are api specific and will not affect any api not supporting them
-    api.sendMessage('example message handled', message);                    // have to pass original message so outgoing api is handled correctly
+  apiHandler.sendMessage('example message', {isReply: true}, message);
+}
+
+/* Web Handler */
+function getRootPage(req, res) {
+  res.render('root', webApp.getOptions(req, {name: NAME, version: VERSION}));
 }
