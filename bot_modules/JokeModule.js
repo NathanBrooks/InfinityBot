@@ -21,7 +21,7 @@ const request = require('request');
 
 /* Module Setup */
 const NAME = "Joke Module"
-const VERSION = "1.0"
+const VERSION = "1.1"
 const URI = "/JokeModule"
 
 // these will be initialized in module.exports.init
@@ -96,7 +96,7 @@ function sendJoke(options, message) {
       if ('joke' in response) { // dad joke
         joke = response.joke;
       }
-      apiHandler.sendMessage(joke, {is_reply: true}, message);
+      apiHandler.sendMessage(joke, {isReply: true}, message);
     }
   });
 }

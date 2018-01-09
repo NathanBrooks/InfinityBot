@@ -26,7 +26,7 @@ var posTagger = new pos.Tagger();
 
 /* Module Setup */
 const NAME = "Markov Module"
-const VERSION = "1.0"
+const VERSION = "1.1"
 const URI = "/MarkovModule"
 
 // these will be initialized in module.exports.init
@@ -54,7 +54,8 @@ module.exports = {
   },
 
   getCommands: () => {
-    return '/generate - Generate a message\n\n';
+    return '/generate - Generate a message\n\n' +
+    '/generateme - Generates a message from your personal data\n\n';
   },
 }
 
@@ -69,6 +70,9 @@ function receiveMessage(receivedEvent) {
         } else {
           generateMessage(receivedEvent.message);
         }
+        break;
+      case '/generateme':
+        generateUserMessage(receivedEvent.message);
         break;
       default:;
     }
@@ -90,7 +94,7 @@ function buildChain(message) {
         var newTag = taggedWords[key][1];
 
         wordCollection.update({context: keywords.join(), nextWord: newWord,
-          tag: newTag}, {$inc: {count: 1}}, {upsert: true});
+          tag: newTag, user: message.uid}, {$inc: {count: 1}}, {upsert: true});
 
         keywords.shift();
         keywords.push(newWord.toLowerCase());
@@ -98,7 +102,7 @@ function buildChain(message) {
 
       if(keywords[0] != '**IGNORE**') {
         wordCollection.update({context: keywords.join(), nextWord: '**IGNORE**',
-          tag: 'null'}, {$inc: {count: 1}}, {upsert: true});
+          tag: 'null', user: message.uid}, {$inc: {count: 1}}, {upsert: true});
       }
     } else {
       apiHandler.sendMessage(err.toString(), {isReply:true}, message);
@@ -108,47 +112,53 @@ function buildChain(message) {
   });
 }
 
-function getWord(wordCollection, keywords) {
+function getWord(wordCollection, keywords, userID) {
   return new Promise((resolve, reject) => {
-    wordCollection.find({context: keywords.join()}).sort({count: 1})
+    wordCollection.find({context: keywords.join(), user: userID})
+      .sort({count: 1})
       .toArray((err, words) => {
       if (err) {
         reject(err);
       } else {
-        wordCollection.aggregate([
-          {$match : {context : keywords.join()}},
-          {$group : {
-            _id: null,
-            myTotal: { $sum : '$count' }
-          }}
-        ], (err, response) => {
-          if (err) {
-            reject(err);
-          } else {
-            var total = response[0].myTotal;
-            var currentProbability = 0.0;
-            var randomNumber = Math.random();
 
-            for (var i in words) {
-              currentProbability += (words[i].count / total);
-              if(randomNumber < currentProbability) {
-                resolve(words[i].nextWord);
+        if(words.length < 1) {
+          resolve('**IGNORE**');
+        } else {
+          wordCollection.aggregate([
+            {$match: {context: keywords.join(), user: userID}},
+            {$group: {
+              _id: null,
+              myTotal: { $sum : '$count' }
+            }}
+          ], (err, response) => {
+            if (err) {
+              reject(err);
+            } else {
+              var total = response[0].myTotal;
+              var currentProbability = 0.0;
+              var randomNumber = Math.random();
+
+              for (var i in words) {
+                currentProbability += (words[i].count / total);
+                if(randomNumber < currentProbability) {
+                  resolve(words[i].nextWord);
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
     });
   });
 }
 
-function buildMessage(wordCollection, generatedMessage, keywords) {
-  return getWord(wordCollection, keywords).then((word) => {
+function buildMessage(wordCollection, generatedMessage, keywords, userID) {
+  return getWord(wordCollection, keywords, userID).then((word) => {
     if(word != '**IGNORE**') {
       generatedMessage += ' ' + word;
       keywords.shift();
       keywords.push(word.toLowerCase());
-      return buildMessage(wordCollection, generatedMessage, keywords)
+      return buildMessage(wordCollection, generatedMessage, keywords, userID);
     } else {
       return generatedMessage;
     }
@@ -182,6 +192,45 @@ function generateMessage(message, input) {
       return buildMessage(wordCollection, '', new Array(2).fill('**IGNORE**'));
     }
   }).then((generatedMessage) => {
+    if (database) { database.close(); }
+    apiHandler.sendMessage(generatedMessage, {isReply: true}, message);
+  }).catch((err) => {
+    if (database) { database.close(); }
+    console.log(err);
+    apiHandler.sendMessage(err.toString(), {isReply: true}, message);
+  });
+}
+
+function generateUserMessage(message) {
+  var database;
+  var wordCollection;
+
+  mongoClient.connect(process.env.MONGO_DATABASE).then((db) => {
+    database = db;
+    return database.collection('WordCollection');
+  }).then((collection) => {
+    wordCollection = collection;
+    if(typeof input != 'undefined' && Array.isArray(input)) {
+      var initialMessage = input.join(' ');
+
+      var newInput = input.splice(input.length-2,2);
+
+      for(var key in newInput) {
+        newInput[key] = newInput[key].toLowerCase();
+      }
+
+      while(newInput.length < 2) {
+        newInput.unshift('**IGNORE**');
+      }
+
+      return buildMessage(wordCollection, initialMessage, newInput,
+        message.uid);
+    } else {
+      return buildMessage(wordCollection, '',
+        new Array(2).fill('**IGNORE**'), message.uid);
+    }
+  }).then((generatedMessage) => {
+    if (database) { database.close(); }
     apiHandler.sendMessage(generatedMessage, {isReply: true}, message);
   }).catch((err) => {
     if (database) { database.close(); }

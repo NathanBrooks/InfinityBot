@@ -21,7 +21,7 @@ const telegramBotApi = require('telegram-bot-api');
 
 /* module setup */
 const NAME = 'Telegram Api';
-const VERSION = '1.0';
+const VERSION = '1.1';
 const URI = '/TelegramAPI';
 const CLIENTID = 'Telegram';
 
@@ -82,7 +82,7 @@ function sendMessage(message) {
     var reply = false;
     var replyTo = 0;
 
-    if ('isReply' in message.extras && message.extras.is_reply) {
+    if ('isReply' in message.extras && message.extras.isReply) {
       reply = true;
       replyTo = message.content.message_id;
     }

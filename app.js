@@ -70,12 +70,11 @@ apiHandler.receiveMessage = (message) => {
     var botName = process.env.BOT_NAME.toLowerCase();
     newEvent.paramList = message.text.split(/\s+/);
     newEvent.fullCommand = newEvent.paramList[0].split(/@/);
-    if(message.text[0] == '/' && (newEvent.fullCommand.length == 1 ||
-      newEvent.fullCommand[1].toLowerCase == botName)) {
-      newEvent.isCommand = true;
-    } else {
-      newEvent.isCommand = false;
-    }
+
+    newEvent.isCommand = (message.text[0] == '/' &&
+        (newEvent.fullCommand.length == 1 ||
+        newEvent.fullCommand[1].toLowerCase() == botName));
+
     newEvent.message = message;
   }
   apiHandler.emit('receiveMessage', newEvent);

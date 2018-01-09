@@ -22,7 +22,7 @@ const fs = require('fs');
 
 /* module setup */
 const NAME = 'Discord Api';
-const VERSION = '1.0';
+const VERSION = '1.1';
 const URI = '/DiscordAPI';
 const CLIENTID = 'Discord';
 
@@ -77,7 +77,7 @@ function sendMessage(message) {
   if(message.clientID == CLIENTID) {
     /* handle extras */
     var reply = false
-    if ('is_reply' in message.extras && message.extras.is_reply) {
+    if ('isReply' in message.extras && message.extras.isReply) {
       reply = true;
     }
 

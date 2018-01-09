@@ -22,7 +22,7 @@ const util = require('util');
 
 /* Module Setup */
 const NAME = 'Mood Module';
-const VERSION = '1.0';
+const VERSION = '1.1';
 const URI = '/MoodModule';
 
 // these will be initialized in module.exports.init
@@ -96,7 +96,7 @@ function sendCurrentMood(message) {
   var response = '\nCurrent Mood: ' + currentMoodString + '\n' +
     'i: ' + currentMood;
 
-  apiHandler.sendMessage(response, {is_reply: true}, message);
+  apiHandler.sendMessage(response, {isReply: true}, message);
 }
 
 function checkMood(message) {
