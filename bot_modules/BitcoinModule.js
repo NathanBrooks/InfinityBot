@@ -148,8 +148,10 @@ function amazonSearch(item) {
 };
 
 function getAmazonItem(item) {
+  /*
   return new Promise((resolve, reject) => {
     amazonSearch(item).catch((error) => {
+      console.log(error.Error[0].Message);
       reject(error);
     }).then((results) => {
       if (results && results.length > 0) {
@@ -163,6 +165,12 @@ function getAmazonItem(item) {
         reject('Failed to get Amazon results...');
       }
     });
+  });
+  */
+
+  return new Promise((resolve, reject) => {
+    var price = Math.random() * 3000.0;
+    resolve(new AmazonItem(item, price, ''));
   });
 }
 

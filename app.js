@@ -1,4 +1,4 @@
--/*
+/*
  * Copyright 2018 Nathan Tyler Brooks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +43,9 @@ require('dotenv').config();
 /* Module Comms Handler */
 var apiHandler = new events.EventEmitter();
 apiHandler.setMaxListeners(50);
+// ties for intermodule communication
+apiHandler.moduleRequest = new events.EventEmitter();
+apiHandler.moduleRequest.setMaxListeners(50);
 
 apiHandler.Message = class {
   constructor(clientID, uid, text, fromName, content, extras) {
@@ -64,6 +67,18 @@ apiHandler.ReceivedEvent = class {
   }
 }
 
+apiHandler.statusEvent = class {
+  constructor(status, message) {
+    this.message = message;
+    this.status = status;
+  }
+}
+
+apiHandler.statusList = {
+    typing: 'typing',
+    done: 'done'
+}
+
 apiHandler.receiveMessage = (message) => {
   var newEvent = new apiHandler.ReceivedEvent();
   if(message) {
@@ -75,8 +90,11 @@ apiHandler.receiveMessage = (message) => {
         (newEvent.fullCommand.length == 1 ||
         newEvent.fullCommand[1].toLowerCase() == botName));
 
+
     newEvent.message = message;
+
   }
+
   apiHandler.emit('receiveMessage', newEvent);
 }
 
@@ -87,6 +105,11 @@ apiHandler.sendMessage = (text, extras, message) => {
     text, process.env.BOT_DISPLAY_NAME, message.content, extras);
 
   apiHandler.emit('sendMessage', outgoingMessage);
+}
+
+apiHandler.setBotStatus = (status, message) => {
+  var event = new apiHandler.statusEvent(status, message);
+  apiHandler.emit('updateStatus', event);
 }
 
 /* Master Commands */
@@ -104,7 +127,8 @@ apiHandler.on('receiveMessage', (receivedEvent) => {
 });
 
 function sendHelp(message) {
-  var helpOutput = '\n/help - This help message\n\n';
+  //var helpOutput = '\n/help - This help message\n\n';
+  var helpOutput = '';
   for (var i in moduleHandles) {
     if (moduleHandles[i].getCommands() != '') {
       helpOutput += moduleHandles[i].getCommands();
@@ -252,7 +276,7 @@ webApp.get('/test', (req, res) => {
 });
 
 /* initialize the webServer */
-var webServer = webApp.listen(80, () => {
+var webServer = webApp.listen(8080, () => {
   var host = webServer.address().address;
   var port = webServer.address().port;
 

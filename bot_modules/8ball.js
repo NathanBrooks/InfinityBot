@@ -92,10 +92,10 @@ function getRandomInRage(max) {
 function sendEightBallAnswer(message) {
   var result = eightBallResponses[getRandomInRage(eightBallResponses.length-1)];
   if (result.indexOf('%s') >= 0) {
-    api.sendMessage(util.format(result, message.from_name), {isReply: true},
-      message);
+    apiHandler.sendMessage(util.format(result, message.fromName),
+      {isReply: true}, message);
   } else {
-    api.sendMessage(result, {isReply: true}, message);
+    apiHandler.sendMessage(result, {isReply: true}, message);
   }
 }
 

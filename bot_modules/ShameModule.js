@@ -66,7 +66,8 @@ function receiveMessage(receivedEvent) {
 function shameUser(message) {
   var shameShep = message.text.split(/\s+/);
   if (shameShep.length > 1) {
-    api.sendMessage(`For shame ${shameShep[1]}. For Shame.`, null, message);
+    apiHandler.sendMessage(`For shame ${shameShep[1]}. For Shame.`,
+      null, message);
   }
 }
 

@@ -17,7 +17,7 @@
 'use strict';
 
 /* module requirements */
-const Telegraf = require('telegraf');
+const telegramBotApi = require('telegram-bot-api');
 
 /* module setup */
 const NAME = 'Telegram Api';
@@ -40,7 +40,7 @@ module.exports = {
     webApp = parentWebApp;
 
     apiHandler.on('sendMessage', sendMessage);
-    //apiHandler.on('updateStatus', updateStatus);
+    apiHandler.on('updateStatus', updateStatus);
     webApp.get(URI, getRootPage);
   },
 
@@ -57,22 +57,29 @@ module.exports = {
 }
 
 /* Initialize Telegram API */
-const bot = new Telegraf(process.env.TEL_API_KEY);
+var telegram = new telegramBotApi({
+  token: process.env.TEL_API_KEY,
+  updates: {
+    enabled: true,
+  },
+});
 
-bot.on('text', (ctx) => {
-  var newMessage = new apiHandler.Message(CLIENTID,
-    CLIENTID + ctx.message.from.id + ctx.message.chat.id,
-    ctx.message.text,
-    ctx.message.from.first_name,
-    ctx.message,
-    {});
+telegram.on('message', (message) => {
+  if(message && 'text' in message) {
+    var newMessage = new apiHandler.Message(CLIENTID,
+        CLIENTID + message.from.id + message.chat.id,
+        message.text,
+        message.from.first_name,
+        message,
+        {});
 
-  if('reply_to_message' in newMessage.content) {
-    newMessage.extras.replyToText = newMessage.content.reply_to_message.text;
+    if('reply_to_message' in newMessage.content) {
+      newMessage.extras.replyToText = newMessage.content.reply_to_message.text;
+    }
+
+    Object.freeze(newMessage); // freeze so that no modules change it
+    apiHandler.receiveMessage(newMessage);
   }
-
-  Object.freeze(newMessage);
-  apiHandler.receiveMessage(newMessage);
 });
 
 function sendMessage(message) {
@@ -81,34 +88,37 @@ function sendMessage(message) {
     var reply = false;
     var replyTo = 0;
 
-    if('isReply' in message.extras && message.extras.isReply) {
+    if ('isReply' in message.extras && message.extras.isReply) {
       reply = true;
       replyTo = message.content.message_id;
     }
 
-    if('isReplyToReply' in message.extras && message.extras.isReplyToReply &&
+    if ('isReplyToReply' in message.extras && message.extras.isReplyToReply &&
         'reply_to_message' in message.content) {
       reply = true;
       replyTo = message.content.reply_to_message.message_id;
     }
 
     if (message.text.split(/\s/) <= 1) {
-      bot.telegram.sendMessage(message.content.chat.id, `<empty message>`,
-        {reply_to_message_id: (reply ? replyTo : undefined)});
+      telegram.sendMessage({
+            chat_id: message.content.chat.id,
+            text: '<empty message>',
+            reply_to_message_id: (reply ? replyTo : undefined),
+      });
     } else {
       var i = 0;
       while (i != message.text.length) {
         var tmp = i;
         i = Math.min(i + 4096, message.text.length);
-        bot.telegram.sendMessage(message.content.chat.id,
-          message.text.substring(tmp, i),
-          {reply_to_message_id: (reply ? replyTo : undefined)});
+        telegram.sendMessage({
+            chat_id: message.content.chat.id,
+            text: message.text.substring(tmp, i),
+            reply_to_message_id: (reply ? replyTo : undefined),
+        });
       }
     }
   }
 }
-
-bot.launch();
 
 function updateStatus(event) {
   if (event.message.clientID == CLIENTID) {
@@ -123,10 +133,12 @@ function updateStatus(event) {
     }
 
     if (action != 'NOACTION') {
-      bot.telegram.sendChatAction(action, message.content.chat.id)
-        .catch((err) => {
-          console.log(err.toString());
-        });
+      telegram.sendChatAction({
+        action: action,
+        chat_id: message.content.chat.id,
+      }).catch((err) => {
+        console.log(err.toString());
+      });
     }
   }
 }

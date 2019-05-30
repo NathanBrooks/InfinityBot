@@ -53,9 +53,7 @@ module.exports = {
 };
 
 function receiveMessage(receivedEvent) {
-  if (!receivedEvent.isCommand) {
-    checkForRedditLink(receivedEvent.message);
-  }
+  checkForRedditLink(receivedEvent.message);
 }
 
 function checkForRedditLink(message) {
@@ -75,7 +73,7 @@ function checkForRedditLink(message) {
   }
 
   if (linkCount > 0) {
-    api.sendMessage(linkResult, {isReply: true}, message);
+    apiHandler.sendMessage(linkResult, {isReply: true}, message);
   }
 }
 

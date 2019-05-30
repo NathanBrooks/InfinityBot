@@ -21,7 +21,8 @@ window.onload = function() {
     function sendMessage() {
         var text = field.value;
         field.value = '';
-        if(commands.length == 0 || (commands.length > 0 && commands[0] != text)) {
+        if(commands.length == 0 || (commands.length > 0 && commands[0] != text))
+        {
             commands.unshift(text);
         }
         commandIndex = -1;

@@ -55,7 +55,8 @@ module.exports = {
 
   getCommands: () => {
     return '/generate - Generate a message\n\n' +
-    '/generateme - Generates a message from your personal data\n\n';
+    '/generateme - Generates a message from your personal data\n\n' +
+    '/generatememe - Markov generate a meme\n\n';
   },
 }
 
@@ -73,6 +74,15 @@ function receiveMessage(receivedEvent) {
         break;
       case '/generateme':
         generateUserMessage(receivedEvent.message);
+        break;
+      case '/generatememe':
+        if (receivedEvent.paramList.length > 1) {
+            var input = receivedEvent.paramList.splice(1,
+              receivedEvent.paramList.length);
+            generateMeme(receivedEvent.message, input);
+        } else {
+          generateMeme(receivedEvent.message);
+        }
         break;
       default:;
     }
@@ -165,9 +175,13 @@ function buildMessage(wordCollection, generatedMessage, keywords, userID) {
   });
 }
 
+// TODO: FIX THIS MESS
+
 function generateMessage(message, input) {
   var database;
   var wordCollection;
+
+  apiHandler.setBotStatus(apiHandler.statusList.typing, message);
 
   mongoClient.connect(process.env.MONGO_DATABASE).then((db) => {
     database = db;
@@ -187,23 +201,27 @@ function generateMessage(message, input) {
         newInput.unshift('**IGNORE**');
       }
 
-      return buildMessage(wordCollection, initialMessage, newInput)
+      return buildMessage(wordCollection, initialMessage, newInput);
     } else {
       return buildMessage(wordCollection, '', new Array(2).fill('**IGNORE**'));
     }
   }).then((generatedMessage) => {
     if (database) { database.close(); }
     apiHandler.sendMessage(generatedMessage, {isReply: true}, message);
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
   }).catch((err) => {
     if (database) { database.close(); }
     console.log(err);
     apiHandler.sendMessage(err.toString(), {isReply: true}, message);
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
   });
 }
 
 function generateUserMessage(message) {
   var database;
   var wordCollection;
+
+  apiHandler.setBotStatus(apiHandler.statusList.typing, message);
 
   mongoClient.connect(process.env.MONGO_DATABASE).then((db) => {
     database = db;
@@ -232,10 +250,59 @@ function generateUserMessage(message) {
   }).then((generatedMessage) => {
     if (database) { database.close(); }
     apiHandler.sendMessage(generatedMessage, {isReply: true}, message);
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
   }).catch((err) => {
     if (database) { database.close(); }
     console.log(err);
     apiHandler.sendMessage(err.toString(), {isReply: true}, message);
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
+  });
+}
+
+function generateMeme(message, input) {
+  var database;
+  var wordCollection;
+  var line0 = '';
+  var line1 = '';
+
+  apiHandler.setBotStatus(apiHandler.statusList.typing, message);
+
+  mongoClient.connect(process.env.MONGO_DATABASE).then((db) => {
+    database = db;
+    return database.collection('WordCollection');
+  }).then((collection) => {
+    wordCollection = collection;
+    if(typeof input != 'undefined' && Array.isArray(input)) {
+      var initialMessage = input.join(' ');
+
+      var newInput = input.splice(input.length-2,2);
+
+      for(var key in newInput) {
+        newInput[key] = newInput[key].toLowerCase();
+      }
+
+      while(newInput.length < 2) {
+        newInput.unshift('**IGNORE**');
+      }
+
+      return buildMessage(wordCollection, initialMessage, newInput);
+    } else {
+      return buildMessage(wordCollection, '', new Array(2).fill('**IGNORE**'));
+    }
+  }).then((generatedMessage) => {
+    line0 = generatedMessage;
+    return buildMessage(wordCollection, '', new Array(2).fill('**IGNORE**'));
+  }).then((generatedMessage) => {
+    if (database) { database.close(); }
+    line1 = generatedMessage;
+    apiHandler.moduleRequest.emit('generateMeme', {line0: line0, line1: line1,
+      message: message});
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
+  }).catch((err) => {
+    if (database) { database.close(); }
+    console.log(err);
+    apiHandler.sendMessage(err.toString(), {isReply: true}, message);
+    apiHandler.setBotStatus(apiHandler.statusList.done, message);
   });
 }
 

@@ -64,7 +64,7 @@ function receiveMessage(receivedEvent) {
 }
 
 function confirmMessage(message) {
-  api.sendMEssage('I can confirm this!', {isReply: true, isReplyToReply: true},
+  apiHandler.sendMessage('I can confirm this!', {isReply: true, isReplyToReply: true},
     message);
 }
 

@@ -79,7 +79,7 @@ function getCatFact() {
         try {
           var parsedResponse = JSON.parse(body);
           if(parsedResponse && 'fact' in parsedResponse) {
-            resolve(parsedResponse);
+            resolve(parsedResponse.fact);
           } else {
             reject('Invalid response from cat facts.');
           }
@@ -93,7 +93,7 @@ function getCatFact() {
 
 function sendCatFact(message) {
   getCatFact().then((fact) => {
-    apiHandler.sendMessage('Cat Fact: \n' + fact, {isReply: true}, message);
+    apiHandler.sendMessage('Cat Fact: \n\n' + fact, {isReply: true}, message);
   }).catch((err) => {
     apiHandler.sendMessage(err.toString(), {isReply: true}, message);
   });

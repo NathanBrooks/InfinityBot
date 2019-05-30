@@ -41,6 +41,7 @@ module.exports = {
     webApp = parentWebApp;
 
     apiHandler.on('sendMessage', sendMessage);
+    apiHandler.on('updateStatus', updateStatus);
     webApp.get(URI, getRootPage);
   },
 
@@ -95,6 +96,25 @@ function sendMessage(message) {
               result.channel.send(message.text);
             }
           }).catch(console.err);
+    }
+  }
+}
+
+function updateStatus(event) {
+  if (event.message.clientID == CLIENTID) {
+    var message = event.message;
+    var channel = discordClient.channels.get(message.content.channelID);
+
+    if (channel) {
+      switch (event.status) {
+        case apiHandler.statusList.typing:
+          channel.startTyping();
+          break;
+        case apiHandler.statusList.done:
+          channel.stopTyping();
+          break;
+        default:;
+      }
     }
   }
 }
