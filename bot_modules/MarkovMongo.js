@@ -130,7 +130,6 @@ function getWord(wordCollection, keywords, userID) {
       if (err) {
         reject(err);
       } else {
-
         if(words.length < 1) {
           resolve('**IGNORE**');
         } else {
