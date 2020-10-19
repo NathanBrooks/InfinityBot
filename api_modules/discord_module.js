@@ -61,6 +61,10 @@ var discordClient = new discord.Client();
 discordClient.login(process.env.DISCORD_API_KEY);
 
 discordClient.on('message', (message) => {
+  if(message.author.id + message.channel.id == process.env.BOT_DISCORD_UID) {
+    return;
+  }
+
   var strippedMessage = {
     'messageID': message.id,
     'channelID': message.channel.id

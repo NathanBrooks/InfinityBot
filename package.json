@@ -24,6 +24,7 @@
     "express-handlebars": "^3.1.0",
     "express-session": "^1.16.2",
     "formidable": "^1.2.1",
+    "googleapis": "^46.0.0",
     "libsodium-wrappers": "^0.7.4",
     "mongodb": "^2.2.36",
     "mongoose": "^5.6.1",

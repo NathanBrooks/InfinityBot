@@ -122,12 +122,52 @@ function buildChain(message) {
   });
 }
 
-function getWord(wordCollection, keywords, userID) {
+function getWord(wordCollection, keywords) {
+  return new Promise((resolve, reject) => {
+    wordCollection.find({context: keywords.join()})
+      .sort({count: 1})
+      .toArray((err, words) => {
+      if (err) {
+        reject(err);
+      } else {
+        if(words.length < 1) {
+          resolve('**IGNORE**');
+        } else {
+          wordCollection.aggregate([
+            {$match: {context: keywords.join()}},
+            {$group: {
+              _id: null,
+              myTotal: { $sum : '$count' }
+            }}
+          ], (err, response) => {
+            if (err) {
+              reject(err);
+            } else {
+              var total = response[0].myTotal;
+              var currentProbability = 0.0;
+              var randomNumber = Math.random();
+
+              for (var i in words) {
+                currentProbability += (words[i].count / total);
+                if(randomNumber < currentProbability) {
+                  resolve(words[i].nextWord);
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+  });
+}
+
+function getUserWord(wordCollection, keywords, userID) {
   return new Promise((resolve, reject) => {
     wordCollection.find({context: keywords.join(), user: userID})
       .sort({count: 1})
       .toArray((err, words) => {
       if (err) {
+        console.log("error:" + err.toString());
         reject(err);
       } else {
         if(words.length < 1) {
@@ -161,13 +201,26 @@ function getWord(wordCollection, keywords, userID) {
   });
 }
 
-function buildMessage(wordCollection, generatedMessage, keywords, userID) {
-  return getWord(wordCollection, keywords, userID).then((word) => {
+function buildMessage(wordCollection, generatedMessage, keywords) {
+  return getWord(wordCollection, keywords).then((word) => {
     if(word != '**IGNORE**') {
       generatedMessage += ' ' + word;
       keywords.shift();
       keywords.push(word.toLowerCase());
-      return buildMessage(wordCollection, generatedMessage, keywords, userID);
+      return buildMessage(wordCollection, generatedMessage, keywords);
+    } else {
+      return generatedMessage;
+    }
+  });
+}
+
+function buildUserMessage(wordCollection, generatedMessage, keywords, userID) {
+  return getUserWord(wordCollection, keywords, userID).then((word) => {
+    if(word != '**IGNORE**') {
+      generatedMessage += ' ' + word;
+      keywords.shift();
+      keywords.push(word.toLowerCase());
+      return buildUserMessage(wordCollection, generatedMessage, keywords, userID);
     } else {
       return generatedMessage;
     }
@@ -210,7 +263,6 @@ function generateMessage(message, input) {
     apiHandler.setBotStatus(apiHandler.statusList.done, message);
   }).catch((err) => {
     if (database) { database.close(); }
-    console.log(err);
     apiHandler.sendMessage(err.toString(), {isReply: true}, message);
     apiHandler.setBotStatus(apiHandler.statusList.done, message);
   });
@@ -240,10 +292,10 @@ function generateUserMessage(message) {
         newInput.unshift('**IGNORE**');
       }
 
-      return buildMessage(wordCollection, initialMessage, newInput,
+      return buildUserMessage(wordCollection, initialMessage, newInput,
         message.uid);
     } else {
-      return buildMessage(wordCollection, '',
+      return buildUserMessage(wordCollection, '',
         new Array(2).fill('**IGNORE**'), message.uid);
     }
   }).then((generatedMessage) => {

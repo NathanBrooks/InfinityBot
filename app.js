@@ -92,9 +92,7 @@ apiHandler.receiveMessage = (message) => {
 
 
     newEvent.message = message;
-
   }
-
   apiHandler.emit('receiveMessage', newEvent);
 }
 
@@ -276,12 +274,15 @@ webApp.get('/test', (req, res) => {
 });
 
 /* initialize the webServer */
+/*
 var webServer = webApp.listen(8080, () => {
   var host = webServer.address().address;
   var port = webServer.address().port;
 
   console.log('Web listening @ http://%s:%s', host, port);
 })
+*/
+var webServer = {};
 
 /* module monitor */
 var watcher = chokidar.watch(['./bot_modules', './api_modules'], {
