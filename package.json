@@ -34,7 +34,7 @@
     "passport-google-oauth2": "^0.1.6",
     "pos": "^0.4.2",
     "request": "^2.88.0",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.5.0",
     "sodium": "^2.0.3",
     "synaptic": "^1.1.4",
     "telegraf": "^3.30.1",
