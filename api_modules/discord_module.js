@@ -60,6 +60,8 @@ module.exports = {
 var discordClient = new discord.Client();
 discordClient.login(process.env.DISCORD_API_KEY);
 
+var toggleFlag = false;
+
 discordClient.on('message', (message) => {
   if(message.author.id + message.channel.id == process.env.BOT_DISCORD_UID) {
     return;
@@ -68,6 +70,50 @@ discordClient.on('message', (message) => {
   var strippedMessage = {
     'messageID': message.id,
     'channelID': message.channel.id
+  }
+
+  if(message.content == "testing" && !toggleFlag && false) {
+    console.log("begin collection");
+    toggleFlag = true;
+
+    if (discordClient.channels.cache.has(message.channel.id)) {
+      var messageManager = discordClient.channels.cache.get(message.channel.id).messages;
+      var previousMessageId = "373724322168176641";
+
+      function recursiveGet(lastMessageId) {
+        return messageManager.fetch(
+          {limit: 100, before: lastMessageId}).then((result) => {
+            var finalMessage;
+            result.forEach((msg) => {
+              console.log(msg.content + " : " + JSON.stringify(msg.createdAt) + " :: ID::" + msg.id);
+
+              if(msg.content[0] == '/' || msg.content[0] == '<') {
+                console.log("skipping command");
+              } else {
+                var newStrippedMessage = {
+                  'messageID': message.id,
+                  'channelID': msg.channel.id
+                }
+
+                var newMessage = new apiHandler.Message(CLIENTID, CLIENTID +
+                  msg.author.id + msg.channel.id, msg.content,
+                  msg.author.username, newStrippedMessage, {});
+                  apiHandler.receiveMessage(newMessage);
+              }
+
+              finalMessage = msg;
+            });
+            if(result.size == 100) {
+              recursiveGet(finalMessage.id);
+            } else {
+              console.log("DONE!!!!!!!!!!!");
+            }
+          }).catch(console.err);
+      }
+
+
+      recursiveGet(previousMessageId);
+    }
   }
 
   var newMessage = new apiHandler.Message(CLIENTID, CLIENTID +
@@ -86,8 +132,8 @@ function sendMessage(message) {
       reply = true;
     }
 
-    if (discordClient.channels.has(message.content.channelID)) {
-      discordClient.channels.get(message.content.channelID).fetchMessage(
+    if (discordClient.channels.cache.has(message.content.channelID)) {
+      discordClient.channels.cache.get(message.content.channelID).messages.fetch(
           message.content.messageID).then((result) => {
             var output = 'Empty Message';
             if (message.text.length > 0) {
@@ -107,7 +153,7 @@ function sendMessage(message) {
 function updateStatus(event) {
   if (event.message.clientID == CLIENTID) {
     var message = event.message;
-    var channel = discordClient.channels.get(message.content.channelID);
+    var channel = discordClient.channels.cache.get(message.content.channelID);
 
     if (channel) {
       switch (event.status) {
