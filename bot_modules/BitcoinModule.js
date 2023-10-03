@@ -42,21 +42,15 @@ class AmazonItem {
 }
 
 const FUNNYOBJECTS = [
-    'dildos',
     'cat stickers',
     'car keys',
     'cokes',
     'drink umbrellas',
-    'body pillows',
-    'sword art body pillows',
     'college textbooks',
     'rubber chickens',
-    'dog collars',
     'squeeky toys',
     'bags of dog food',
     'tea bags',
-    'porn',
-    'noose',
 ];
 
 const FUNNYREQUESTS = [
